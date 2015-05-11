@@ -1,2 +1,7 @@
 # cs224d
-CS 224d class project
+Neural Arithmetic and Equation Solver
+
+## To-do list
+* Add evaluation metric (use `sklearn`)
+* Apply `rnnlm.py` to this problem
+* Write encoder-decoder RNN
