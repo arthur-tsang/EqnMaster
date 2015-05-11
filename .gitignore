@@ -1,0 +1,4 @@
+# .gitignore file
+# put all the kinds of files we don't want git to keep track of here
+
+*~
