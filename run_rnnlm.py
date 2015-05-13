@@ -20,13 +20,6 @@ def decode(indices):
 x_len = 3
 y_len = 4
 
-def lengthen(num_string, len_full):
-    # So that our number strings are more uniform, we can lengthen all
-    # numbers by adding zeros at the front
-    assert(len(num_string) <= len_full)
-    len_front = len_full - len(num_string)
-    return '0' * len_front + num_string
-
 def lengthen_double(x_string):
     # format from '21 + 12' -> '021 + 012'
     return ' + '.join([lengthen(s, x_len) for s in x_string.split(' + ')])
