@@ -194,22 +194,21 @@ class RNNLM(NNBase):
     #     return yhat
 
 
-    # grad_check is out of commission
-    # def grad_check(self, x, y, outfd=sys.stderr, **kwargs):
-    #     """
-    #     Wrapper for gradient check on RNNs;
-    #     ensures that backprop-through-time is run to completion,
-    #     computing the full gradient for the loss as summed over
-    #     the input sequence and predictions.
+    def grad_check(self, x, y, outfd=sys.stderr, **kwargs):
+        """
+        Wrapper for gradient check on RNNs;
+        ensures that backprop-through-time is run to completion,
+        computing the full gradient for the loss as summed over
+        the input sequence and predictions.
 
-    #     Do not modify this function!
-    #     """
-    #     bptt_old = self.bptt
-    #     self.bptt = len(y)
-    #     print >> outfd, "NOTE: temporarily setting self.bptt = len(y) = %d to compute true gradient." % self.bptt
-    #     NNBase.grad_check(self, x, y, outfd=outfd, **kwargs)
-    #     self.bptt = bptt_old
-    #     print >> outfd, "Reset self.bptt = %d" % self.bptt
+        Do not modify this function!
+        """
+        bptt_old = self.bptt
+        self.bptt = len(x)
+        print >> outfd, "NOTE: temporarily setting self.bptt = len(y) = %d to compute true gradient." % self.bptt
+        NNBase.grad_check(self, x, y, outfd=outfd, **kwargs)
+        self.bptt = bptt_old
+        print >> outfd, "Reset self.bptt = %d" % self.bptt
 
 
     def compute_seq_loss(self, xs, ys):
