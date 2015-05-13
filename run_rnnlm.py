@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from rnnlm import RNNLM
-
+from misc import lengthen
 import pickle
 import numpy as np
 
@@ -77,7 +77,6 @@ if __name__ == '__main__':
     # with open('rnn_naive.txt', 'w') as f:
     #     pickle.dump(rnns, f)
 
-    rnns = None
     with open('rnn_naive.txt', 'r') as f:
         rnns = pickle.load(f)
 

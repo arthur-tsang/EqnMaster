@@ -5,19 +5,13 @@
 # Here, we present a baseline roughly inspired by the bigram model
 
 from collections import Counter, defaultdict
+from misc import lengthen
 import pickle
 
 # We're cheating a little by assuming some things about our input
 # data that won't always be true necessarily.
 x_len = 3
 y_len = 4
-
-def lengthen(num_string, len_full):
-    # So that our number strings are more uniform, we can lengthen all
-    # numbers by adding zeros at the front
-    assert(len(num_string) <= len_full)
-    len_front = len_full - len(num_string)
-    return '0' * len_front + num_string
 
 def get_two_args(x_string):
     # split args by operator, e.g. '21 + 12' => ['021','012']
