@@ -27,9 +27,6 @@ def scramble_double(x_string):
     # format 'abc + 123' to 'a1b2c3'
     nums = x_string.split(' + ')
     return ''.join([x1 + x2 for x1,x2 in zip(nums[0], nums[1])])
-def easy_double(x_string):
-    # format from '23 + 456' -> '023456'
-    return ''.join([lengthen(s,x_len)[2] for s in x_string.split(' + ')])
 
 def train(xy_data):
     rnns = [RNNLM(np.zeros((vdim, hdim))) for _ in range(y_len)]
