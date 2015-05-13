@@ -17,7 +17,7 @@ class BigramBaseline:
         self.x_len = 3
         self.y_len = 4
 
-        self.cache = defaultdict(Counter)
+        self.cache = None
 
     def num_split(self, x_string):
         # split args by operator, e.g. '21 + 12' => ['021','012']
@@ -32,6 +32,8 @@ class BigramBaseline:
         # (index of x0 and x1, digit x0 of first arg, digit x1 of second arg, index of answer)
         # the counter then stores how many times we see each character
         #   appear for this digit of the answer
+        self.cache = defaultdict(Counter)
+
         for x,y in xy_data:
             # we split our args by the operator
             nums = self.num_split(x)
@@ -69,8 +71,8 @@ if __name__ == '__main__':
     bb = BigramBaseline()
 
     cache = bb.learn(train_data)
-    print bb.predict_one('123 + 456')
-    print bb.predict_one('998 + 456')
-    print bb.predict_one('9 + 9')
+    print '123 + 456 =', bb.predict_one('123 + 456')
+    print '998 + 456 =', bb.predict_one('998 + 456')
+    print '9 + 9 =', bb.predict_one('9 + 9')
 
 
