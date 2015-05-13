@@ -45,7 +45,7 @@ class NaiveRnnlm:
         xs = [np.array(self.encode_expr(self.scramble_double(x))) for x,y in xy_data]
         ys = [self.encode_expr(lengthen(y, self.y_len)) for x,y in xy_data]
 
-        for i,rnn_i in enumerate(rnns):
+        for i,rnn_i in enumerate(self.rnns):
             # where i is the index of the rnn we're using
             print 'i',i
 
@@ -76,15 +76,15 @@ if __name__ == '__main__':
     with open('data/train.txt', 'r') as f:
         train_data = pickle.load(f)
 
-    # rnns = train(train_data)
-    
-    # with open('rnn_naive.txt', 'w') as f:
-    #     pickle.dump(rnns, f)
-
-    with open('rnn_naive.txt', 'r') as f:
-        rnns = pickle.load(f)
-
     nr = NaiveRnnlm()
+
+    rnns = nr.train(train_data)
+    
+    with open('rnn_naive.txt', 'w') as f:
+        pickle.dump(rnns, f)
+
+    # with open('rnn_naive.txt', 'r') as f:
+    #     rnns = pickle.load(f)
 
     print '123 + 456 =', nr.predict_one('123 + 456', rnns)
     print '998 + 456 =', nr.predict_one('777 + 999', rnns)
