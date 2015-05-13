@@ -3,6 +3,7 @@
 ##
 
 from numpy import *
+import pickle
 
 def random_weight_matrix(m, n):
     #### YOUR CODE HERE ####
@@ -18,3 +19,9 @@ def lengthen(num_string, len_full):
     assert(len(num_string) <= len_full)
     len_front = len_full - len(num_string)
     return '0' * len_front + num_string
+
+def get_data(filename):
+    # Returns pickled data stored at the given filename
+    with open(filename, 'r') as f:
+        data = pickle.load(f)
+    return data

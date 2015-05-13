@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from rnnlm import RNNLM
-from misc import lengthen
+from misc import lengthen, get_data
 import pickle
 import numpy as np
 
@@ -73,8 +73,7 @@ class NaiveRnnlm:
 
 
 if __name__ == '__main__':
-    with open('data/train.txt', 'r') as f:
-        train_data = pickle.load(f)
+    train_data = get_data('data/train.txt')
 
     nr = NaiveRnnlm()
 

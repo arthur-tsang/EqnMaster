@@ -5,8 +5,7 @@
 # Here, we present a baseline roughly inspired by the bigram model
 
 from collections import Counter, defaultdict
-from misc import lengthen
-import pickle
+from misc import lengthen, get_data
 
 class BigramBaseline:
 
@@ -65,8 +64,7 @@ class BigramBaseline:
 
 
 if __name__ == '__main__':
-    with open('data/train.txt', 'r') as f:
-        train_data = pickle.load(f)
+    train_data = get_data('data/train.txt')
         
     bb = BigramBaseline()
 
@@ -74,5 +72,3 @@ if __name__ == '__main__':
     print '123 + 456 =', bb.predict_one('123 + 456')
     print '998 + 456 =', bb.predict_one('998 + 456')
     print '9 + 9 =', bb.predict_one('9 + 9')
-
-
