@@ -2,6 +2,6 @@
 Neural Arithmetic and Equation Solver
 
 ## To-do list
-* Add evaluation metric (use `sklearn`)
-* Apply `rnnlm.py` to this problem
-* Write encoder-decoder RNN
+* Add evaluation metric (use `sklearn`?)
+* Learn Theano
+* Write encoder-decoder RNN, LSTM
