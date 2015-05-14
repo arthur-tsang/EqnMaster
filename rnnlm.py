@@ -36,7 +36,7 @@ class RNNLM(NNBase):
         self.hdim = L0.shape[1] # word vector dimensions
         self.vdim = L0.shape[0] # vocab size
         param_dims = dict(H = (self.hdim, self.hdim),
-                          U = L0.shape)
+                          U = (L0.shape if U0 is None else U0.shape))
         # note that only L gets sparse updates
         param_dims_sparse = dict(L = L0.shape)
         NNBase.__init__(self, param_dims, param_dims_sparse)
