@@ -10,7 +10,7 @@ class NaiveRnnlmDiscr:
 
     def __init__(self, scramble_name = 'noscramble', bptt = 1):
         self.alpha = .1
-        self.n_epochs = 40
+        self.n_epochs = 100
 
         self.hdim = 10
         self.vocab = list('0123456789+ =') # list of all possible characters we might see
@@ -74,7 +74,7 @@ class NaiveRnnlmDiscr:
                 self.rnn.train_point_sgd(x, y, self.alpha)
             # print 'train loss', rnn_i.compute_loss(xs_i, ys_i)
             if j % 10 == 0:
-                print 'dev loss', self.rnn.compute_loss(dev_xs, dev_ys)
+                print 'dev loss', self.rnn.compute_loss(dev_xs[:100], dev_ys[:100]), 'train loss', self.rnn.compute_loss(xs[:100], ys[:100])
 
             
         # # extra stuff to print
@@ -101,7 +101,7 @@ if __name__ == '__main__':
 
     train_data = get_data('data/neg_train.txt')
 
-    nr = NaiveRnnlmDiscr(scramble_name = 'noscramble', bptt = 10)
+    nr = NaiveRnnlmDiscr(scramble_name = 'noscramble', bptt = 2)
 
     should_retrain = 'retrain' in sys.argv[1:]
     should_train = 'train' in sys.argv[1:] or should_retrain

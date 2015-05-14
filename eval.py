@@ -38,7 +38,10 @@ def nr_test(rnns_file, data, discr = False):
 if __name__ == '__main__':
     train_data = get_data('data/train.txt')
     dev_data = get_data('data/dev.txt')
+    train_data_discr = get_data('data/neg_train.txt')
     dev_data_discr = get_data('data/neg_dev.txt')
+
+    print 'Dev set scores'
 
     # bigram baseline part
     bb = BigramBaseline()
@@ -52,3 +55,16 @@ if __name__ == '__main__':
     nr_test('rnn_naive_rot.txt', dev_data)
     nr_test('rnn_naive_rot_bptt.txt', dev_data)
     nr_test('rnn_naive_discr.txt', dev_data_discr, True)
+
+
+    print 'Train set scores'
+    # bigram baseline part
+    print 'bb eval:', eval_model(bb.predict_one, train_data)
+    
+    # naive rnn part
+    nr_test('rnn_naive.txt', train_data)
+    nr_test('rnn_naive_oracle.txt', train_data)
+    nr_test('rnn_naive_oracle_bptt.txt', train_data)
+    nr_test('rnn_naive_rot.txt', train_data)
+    nr_test('rnn_naive_rot_bptt.txt', train_data)
+    nr_test('rnn_naive_discr.txt', train_data_discr, True)
