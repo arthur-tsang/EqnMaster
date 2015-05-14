@@ -46,7 +46,9 @@ class NaiveRnnlm:
     def rot_scramble(self, x_string, i):
         six_digs = self.scramble_double(x_string)
         start_dig = 0 if i == 0 else i - 1
-        return reversed(six_digs[start_dig:] + six_digs[:start_dig])
+        return [c for c in reversed(six_digs[start_dig:] + six_digs[:start_dig])]
+    def rot_scramble_half(self, x_string, i):
+        return self.rot_scramble(x_string, i)[3:]
             
 
     def train(self, xy_data, rnns = None):
@@ -99,11 +101,11 @@ class NaiveRnnlm:
 if __name__ == '__main__':
     # Possible arguments are 'train', 'retrain'. Default mode is demo
 
-    rnns_file = 'rnn_naive_rot.txt'
+    rnns_file = 'rnn_naive_rot_half.txt'
 
     train_data = get_data('data/train.txt')
 
-    nr = NaiveRnnlm(scramble_name = 'rot_scramble', bptt = 1)
+    nr = NaiveRnnlm(scramble_name = 'rot_scramble_half', bptt = 1)
 
     should_retrain = 'retrain' in sys.argv[1:]
     should_train = 'train' in sys.argv[1:] or should_retrain

@@ -51,6 +51,11 @@ if __name__ == '__main__':
         nr.rnns = pickle.load(f)
     print 'nr rot eval:', eval_model(nr.predict_one, dev_data)
 
+    # input-rotation latter half rnn without bptt part
+    with open('rnn_naive_rot_half.txt', 'r') as f:
+        nr.rnns = pickle.load(f)
+    print 'nr rot eval:', eval_model(nr.predict_one, dev_data)
+
     # input-rotation rnn with bptt part
     with open('rnn_naive_rot_bptt.txt', 'r') as f:
         nr.rnns = pickle.load(f)
