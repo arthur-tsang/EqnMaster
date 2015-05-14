@@ -8,7 +8,7 @@ import numpy as np
 
 class NaiveRnnlm:
 
-    def __init__(self, bptt = 1):
+    def __init__(self, scramble_name = 'two_dig_scramble', bptt = 1):
 
         # for now, sort of cheat and assume fixed size inputs and outputs
         self.x_len = 3
@@ -23,6 +23,8 @@ class NaiveRnnlm:
 
         self.rnns = [RNNLM(np.zeros((self.vdim, self.hdim)), bptt = bptt) for _ in range(self.y_len)]
 
+        self.scramble = getattr(self, scramble_name)
+
     def encode_expr(self, expr):
         return [self.vocabmap[c] for c in expr]
     def decode(self, indices):
@@ -36,12 +38,16 @@ class NaiveRnnlm:
         lengthened = self.lengthen_double(x_string)
         nums = lengthened.split(' + ')
         return ''.join([x1 + x2 for x1,x2 in zip(nums[0], nums[1])])
-    def oracle_scramble(self, x_string, i):
+    def two_dig_scramble(self, x_string, i):
         # where i is the output digit we're computing
         # in my opinion, this function knows a little too much about how to pick our digits
         x_slice = slice(0, 2) if i == 0 else slice(2*(i-1), 2*i)
         return self.scramble_double(x_string)[x_slice]
-        
+    def rot_scramble(self, x_string, i):
+        six_digs = self.scramble_double(x_string)
+        start_dig = 0 if i == 0 else i - 1
+        return reversed(six_digs[start_dig:] + six_digs[:start_dig])
+            
 
     def train(self, xy_data, rnns = None):
         # This function trains one RNN for each possible output digit
@@ -50,7 +56,7 @@ class NaiveRnnlm:
 
         n_epochs = 40
 
-        xs = [np.array(self.encode_expr(self.scramble_double(x))) for x,y in xy_data]
+        # xs = [np.array(self.encode_expr(self.scramble_double(x))) for x,y in xy_data]
         ys = [self.encode_expr(lengthen(y, self.y_len)) for x,y in xy_data]
 
         # for printing purposes only
@@ -60,9 +66,9 @@ class NaiveRnnlm:
             # where i is the index of the rnn we're using
             print 'i',i
 
-            xs_i = [np.array(self.encode_expr(self.oracle_scramble(x, i))) for x,y in xy_data]
+            xs_i = [np.array(self.encode_expr(self.scramble(x, i))) for x,y in xy_data]
             ys_i = [y[i] for y in ys]
-            dev_xs_i = [np.array(self.encode_expr(self.oracle_scramble(x, i))) for x,y in dev_data]
+            dev_xs_i = [np.array(self.encode_expr(self.scramble(x, i))) for x,y in dev_data]
             dev_ys_i = [self.encode_expr(lengthen(y, self.y_len))[i] for x,y in dev_data]
 
             for j in xrange(n_epochs):
@@ -86,18 +92,18 @@ class NaiveRnnlm:
             raise Exception('Model not trained!')
 
 
-        x_encoded = lambda i : self.encode_expr(self.oracle_scramble(x, i))
+        x_encoded = lambda i : self.encode_expr(self.scramble(x, i))
         return ''.join(self.decode([np.argmax(rnns[i].predict(x_encoded(i))) for i in range(self.y_len)]))
 
 
 if __name__ == '__main__':
     # Possible arguments are 'train', 'retrain'. Default mode is demo
 
-    rnns_file = 'rnn_naive_oracle_bptt.txt'
+    rnns_file = 'rnn_naive_rot.txt'
 
     train_data = get_data('data/train.txt')
 
-    nr = NaiveRnnlm(bptt = 2)
+    nr = NaiveRnnlm(scramble_name = 'rot_scramble', bptt = 1)
 
     should_retrain = 'retrain' in sys.argv[1:]
     should_train = 'train' in sys.argv[1:] or should_retrain
