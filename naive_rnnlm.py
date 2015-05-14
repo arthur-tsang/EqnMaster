@@ -2,12 +2,13 @@
 
 from rnnlm import RNNLM
 from misc import lengthen, get_data
+import sys
 import pickle
 import numpy as np
 
 class NaiveRnnlm:
 
-    def __init__(self):
+    def __init__(self, bptt = 1):
 
         # for now, sort of cheat and assume fixed size inputs and outputs
         self.x_len = 3
@@ -20,7 +21,7 @@ class NaiveRnnlm:
         self.vdim = len(self.vocab)
         self.vocabmap = {char:i for i,char in enumerate(self.vocab)} # map char to idx number
 
-        self.rnns = None
+        self.rnns = [RNNLM(np.zeros((self.vdim, self.hdim)), bptt = bptt) for _ in range(self.y_len)]
 
     def encode_expr(self, expr):
         return [self.vocabmap[c] for c in expr]
@@ -32,34 +33,49 @@ class NaiveRnnlm:
         return ' + '.join([lengthen(s, self.x_len) for s in x_string.split(' + ')])
     def scramble_double(self, x_string):
         # format 'abc + 123' to 'a1b2c3'
-        nums = x_string.split(' + ')
+        lengthened = self.lengthen_double(x_string)
+        nums = lengthened.split(' + ')
         return ''.join([x1 + x2 for x1,x2 in zip(nums[0], nums[1])])
+    def oracle_scramble(self, x_string, i):
+        # where i is the output digit we're computing
+        # in my opinion, this function knows a little too much about how to pick our digits
+        x_slice = slice(0, 2) if i == 0 else slice(2*(i-1), 2*i)
+        return self.scramble_double(x_string)[x_slice]
+        
 
-    def train(self, xy_data):
+    def train(self, xy_data, rnns = None):
         # This function trains one RNN for each possible output digit
 
-        self.rnns = [RNNLM(np.zeros((self.vdim, self.hdim))) for _ in range(self.y_len)]
+        self.rnns = rnns if rnns is not None else self.rnns
 
-        n_epochs = 20
+        n_epochs = 40
 
         xs = [np.array(self.encode_expr(self.scramble_double(x))) for x,y in xy_data]
         ys = [self.encode_expr(lengthen(y, self.y_len)) for x,y in xy_data]
+
+        # for printing purposes only
+        dev_data = get_data('data/dev.txt')
 
         for i,rnn_i in enumerate(self.rnns):
             # where i is the index of the rnn we're using
             print 'i',i
 
+            xs_i = [np.array(self.encode_expr(self.oracle_scramble(x, i))) for x,y in xy_data]
             ys_i = [y[i] for y in ys]
+            dev_xs_i = [np.array(self.encode_expr(self.oracle_scramble(x, i))) for x,y in dev_data]
+            dev_ys_i = [self.encode_expr(lengthen(y, self.y_len))[i] for x,y in dev_data]
 
-            for _ in xrange(n_epochs):
-                for x,y in zip(xs, ys):
+            for j in xrange(n_epochs):
+                for x,y in zip(xs_i, ys):
                     rnn_i.train_point_sgd(x, y[i], self.alpha)
-                print 'loss', rnn_i.compute_loss(xs, ys_i)
+                # print 'train loss', rnn_i.compute_loss(xs_i, ys_i)
+                if j % 10 == 0:
+                    print 'dev loss', rnn_i.compute_loss(dev_xs_i, dev_ys_i)
 
-            # extra stuff to print
-            # for x,y in zip(xs,ys)[:5]:
+            # # extra stuff to print
+            # for x,y in zip(xs_i,ys)[:5]:
             #     yhat = rnn_i.predict(x)
-            #     print self.decode(x), yhat, np.argmax(yhat)
+            #     print x, yhat, np.argmax(yhat)
 
         return self.rnns
 
@@ -69,22 +85,48 @@ class NaiveRnnlm:
         if rnns is None:
             raise Exception('Model not trained!')
 
-        return ''.join(self.decode([np.argmax(rnns[i].predict(self.encode_expr(self.scramble_double(x)))) for i in range(self.y_len)]))
+
+        x_encoded = lambda i : self.encode_expr(self.oracle_scramble(x, i))
+        return ''.join(self.decode([np.argmax(rnns[i].predict(x_encoded(i))) for i in range(self.y_len)]))
 
 
 if __name__ == '__main__':
+    # Possible arguments are 'train', 'retrain'. Default mode is demo
+
+    rnns_file = 'rnn_naive_oracle_bptt.txt'
+
     train_data = get_data('data/train.txt')
 
-    nr = NaiveRnnlm()
+    nr = NaiveRnnlm(bptt = 2)
 
-    rnns = nr.train(train_data)
+    should_retrain = 'retrain' in sys.argv[1:]
+    should_train = 'train' in sys.argv[1:] or should_retrain
+
+    if should_train:
+        if should_retrain:
+            with open(rnns_file, 'r') as g:
+                nr.rnns = pickle.load(g)
+
+        rnns = nr.train(train_data)
+        
+        with open(rnns_file, 'w') as f:
+            pickle.dump(rnns, f)
+
+    else:
+        with open(rnns_file, 'r') as f:
+            rnns = pickle.load(f)
+
     
-    with open('rnn_naive.txt', 'w') as f:
-        pickle.dump(rnns, f)
-
-    # with open('rnn_naive.txt', 'r') as f:
-    #     rnns = pickle.load(f)
-
     print '123 + 456 =', nr.predict_one('123 + 456', rnns)
     print '998 + 456 =', nr.predict_one('777 + 999', rnns)
     print '9 + 9 =', nr.predict_one('9 + 9', rnns)
+
+
+# With the semi-oracle scramble, one time
+# 123 + 456 = 0979
+# 998 + 456 = 1071
+# 9 + 9 = 0418
+# training a second round
+# 123 + 456 = 0579
+# 998 + 456 = 1344
+# 9 + 9 = 0108

@@ -35,3 +35,13 @@ if __name__ == '__main__':
     with open('rnn_naive.txt', 'r') as f:
         nr.rnns = pickle.load(f)
     print 'nr eval:', eval_model(nr.predict_one, dev_data)
+
+    # semi-oracle rnn part
+    with open('rnn_naive_oracle.txt', 'r') as f:
+        nr.rnns = pickle.load(f)
+    print 'nr semi-oracle eval:', eval_model(nr.predict_one, dev_data)
+
+    # semi-oracle rnn with bptt part
+    with open('rnn_naive_oracle_bptt.txt', 'r') as f:
+        nr.rnns = pickle.load(f)
+    print 'nr semi-oracle bptt eval:', eval_model(nr.predict_one, dev_data)
