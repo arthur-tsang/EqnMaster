@@ -15,6 +15,7 @@ class NaiveRnnlm:
         self.y_len = 4
 
         self.alpha = .1
+        self.n_epochs = 40
 
         self.hdim = 5
         self.vocab = list('0123456789+ ') # list of all possible characters we might see
@@ -56,8 +57,6 @@ class NaiveRnnlm:
 
         self.rnns = rnns if rnns is not None else self.rnns
 
-        n_epochs = 40
-
         # xs = [np.array(self.encode_expr(self.scramble_double(x))) for x,y in xy_data]
         ys = [self.encode_expr(lengthen(y, self.y_len)) for x,y in xy_data]
 
@@ -73,7 +72,7 @@ class NaiveRnnlm:
             dev_xs_i = [np.array(self.encode_expr(self.scramble(x, i))) for x,y in dev_data]
             dev_ys_i = [self.encode_expr(lengthen(y, self.y_len))[i] for x,y in dev_data]
 
-            for j in xrange(n_epochs):
+            for j in xrange(self.n_epochs):
                 for x,y in zip(xs_i, ys):
                     rnn_i.train_point_sgd(x, y[i], self.alpha)
                 # print 'train loss', rnn_i.compute_loss(xs_i, ys_i)
@@ -101,11 +100,11 @@ class NaiveRnnlm:
 if __name__ == '__main__':
     # Possible arguments are 'train', 'retrain'. Default mode is demo
 
-    rnns_file = 'rnn_naive_rot_half.txt'
+    rnns_file = 'rnn_naive_rot.txt'
 
     train_data = get_data('data/train.txt')
 
-    nr = NaiveRnnlm(scramble_name = 'rot_scramble_half', bptt = 1)
+    nr = NaiveRnnlm(scramble_name = 'rot_scramble', bptt = 1)
 
     should_retrain = 'retrain' in sys.argv[1:]
     should_train = 'train' in sys.argv[1:] or should_retrain
