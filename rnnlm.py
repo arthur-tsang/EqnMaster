@@ -57,6 +57,8 @@ class RNNLM(NNBase):
         
         # Initialize H matrix, as with W and U in part 1
         self.params.H = random_weight_matrix(*param_dims['H'])
+
+        self.lamb = .0001 # regularization
         #### END YOUR CODE ####
 
 
@@ -140,6 +142,11 @@ class RNNLM(NNBase):
 
             delta_next = delta_i
             i -= 1
+
+
+        # regularization
+        self.grads.H += self.lamb * self.params.H
+        self.grads.U += self.lamb * self.params.U
 
         #### END YOUR CODE ####
 
@@ -233,6 +240,8 @@ class RNNLM(NNBase):
                 J = -log(yhat_t[ys])
 
             h_prev = h_t
+
+        J += .5 * self.lamb * (sum(self.params.H**2) + sum(self.params.U**2))
 
         #### END YOUR CODE ####
         return J
