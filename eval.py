@@ -26,10 +26,9 @@ def nr_test(rnns_file, data):
     if os.path.exists(rnns_file):
         with open(rnns_file, 'r') as f:
             nr.rnns = pickle.load(f)
-
-        print 'nr at',rnns_file, eval_model(nr.predict_one, dev_data)
+        print 'nr at', rnns_file, eval_model(nr.predict_one, dev_data)
     else:
-        print 'nr at',rnns_file,'not found'
+        print 'nr at', rnns_file, 'not found'
 
 
 if __name__ == '__main__':
