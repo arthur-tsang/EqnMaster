@@ -5,6 +5,7 @@
 from naive_rnnlm import NaiveRnnlm
 from baseline import BigramBaseline
 from misc import lengthen, get_data
+import os.path
 import pickle
 
 def metric(correct, given):
@@ -20,6 +21,17 @@ def eval_model(predict_fn, xy_data):
     scores = [metric(y, predict_fn(x)) for x,y in xy_data]
     return 1.0 * sum(scores) / len(scores)
 
+def nr_test(rnns_file, data):
+    nr = NaiveRnnlm()
+    if os.path.exists(rnns_file):
+        with open(rnns_file, 'r') as f:
+            nr.rnns = pickle.load(f)
+
+        print 'nr at',rnns_file, eval_model(nr.predict_one, dev_data)
+    else:
+        print 'nr at',rnns_file,'not found'
+
+
 if __name__ == '__main__':
     train_data = get_data('data/train.txt')
     dev_data = get_data('data/dev.txt')
@@ -30,33 +42,8 @@ if __name__ == '__main__':
     print 'bb eval:', eval_model(bb.predict_one, dev_data)
     
     # naive rnn part
-    nr = NaiveRnnlm()
-    # skipping learning because that takes a bit of time
-    with open('rnn_naive.txt', 'r') as f:
-        nr.rnns = pickle.load(f)
-    print 'nr eval:', eval_model(nr.predict_one, dev_data)
-
-    # semi-oracle rnn part
-    with open('rnn_naive_oracle.txt', 'r') as f:
-        nr.rnns = pickle.load(f)
-    print 'nr semi-oracle eval:', eval_model(nr.predict_one, dev_data)
-
-    # semi-oracle rnn with bptt part
-    with open('rnn_naive_oracle_bptt.txt', 'r') as f:
-        nr.rnns = pickle.load(f)
-    print 'nr semi-oracle bptt eval:', eval_model(nr.predict_one, dev_data)
-
-    # input-rotation rnn without bptt part
-    with open('rnn_naive_rot.txt', 'r') as f:
-        nr.rnns = pickle.load(f)
-    print 'nr rot eval:', eval_model(nr.predict_one, dev_data)
-
-    # input-rotation latter half rnn without bptt part
-    with open('rnn_naive_rot_half.txt', 'r') as f:
-        nr.rnns = pickle.load(f)
-    print 'nr rot eval:', eval_model(nr.predict_one, dev_data)
-
-    # input-rotation rnn with bptt part
-    with open('rnn_naive_rot_bptt.txt', 'r') as f:
-        nr.rnns = pickle.load(f)
-    print 'nr rot bptt eval:', eval_model(nr.predict_one, dev_data)
+    nr_test('rnn_naive.txt', dev_data)
+    nr_test('rnn_naive_oracle.txt', dev_data)
+    nr_test('rnn_naive_oracle_bptt.txt', dev_data)
+    nr_test('rnn_naive_rot.txt', dev_data)
+    nr_test('rnn_naive_rot_bptt.txt', dev_data)
