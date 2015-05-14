@@ -17,7 +17,7 @@ class NaiveRnnlm:
         self.alpha = .1
         self.n_epochs = 40
 
-        self.hdim = 5
+        self.hdim = 50
         self.vocab = list('0123456789+ ') # list of all possible characters we might see
         self.vdim = len(self.vocab)
         self.vocabmap = {char:i for i,char in enumerate(self.vocab)} # map char to idx number
@@ -39,6 +39,10 @@ class NaiveRnnlm:
         lengthened = self.lengthen_double(x_string)
         nums = lengthened.split(' + ')
         return ''.join([x1 + x2 for x1,x2 in zip(nums[0], nums[1])])
+    def unscrambled_simple(self, x_string, i):
+        return ''.join(c for c in self.lengthen_double(x_string) if c != ' ' and c != '+')
+    def scramble_simple(self, x_string, i):
+        return self.scramble_double(x_string)
     def two_dig_scramble(self, x_string, i):
         # where i is the output digit we're computing
         # in my opinion, this function knows a little too much about how to pick our digits
@@ -72,6 +76,8 @@ class NaiveRnnlm:
             dev_xs_i = [np.array(self.encode_expr(self.scramble(x, i))) for x,y in dev_data]
             dev_ys_i = [self.encode_expr(lengthen(y, self.y_len))[i] for x,y in dev_data]
 
+            rnn_i.grad_check(dev_xs_i[0], dev_ys_i[0])
+
             for j in xrange(self.n_epochs):
                 for x,y in zip(xs_i, ys):
                     rnn_i.train_point_sgd(x, y[i], self.alpha)
@@ -79,6 +85,7 @@ class NaiveRnnlm:
                 if j % 10 == 0:
                     print 'dev loss', rnn_i.compute_loss(dev_xs_i, dev_ys_i)
 
+            
             # # extra stuff to print
             # for x,y in zip(xs_i,ys)[:5]:
             #     yhat = rnn_i.predict(x)
@@ -100,11 +107,11 @@ class NaiveRnnlm:
 if __name__ == '__main__':
     # Possible arguments are 'train', 'retrain'. Default mode is demo
 
-    rnns_file = 'rnn_naive_rot.txt'
+    rnns_file = 'rnn_naive.txt'
 
     train_data = get_data('data/train.txt')
 
-    nr = NaiveRnnlm(scramble_name = 'rot_scramble', bptt = 1)
+    nr = NaiveRnnlm(scramble_name = 'unscrambled_simple', bptt = 1)
 
     should_retrain = 'retrain' in sys.argv[1:]
     should_train = 'train' in sys.argv[1:] or should_retrain
