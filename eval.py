@@ -26,6 +26,7 @@ def eval_model(predict_fn, xy_data, metric = dig_metric):
     return 1.0 * sum(scores) / len(scores)
 
 def nr_test(rnns_file, data, discr = False):
+    print 'Warning: this function might not act right'
     metric = dig_metric if not discr else bool_metric
     nr = NaiveRnnlm() if not discr else NaiveRnnlmDiscr()
     if os.path.exists(rnns_file):
