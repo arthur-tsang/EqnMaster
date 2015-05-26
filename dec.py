@@ -14,7 +14,7 @@ import numpy as np
 from nn.math import softmax, make_onehot
 from misc import random_weight_matrix
 
-class Encoder:
+class Decoder:
 
     def __init__(self, vdim, hdim, wdim, outdim,
                  alpha=0.005, rho = 0.0001, rseed=10):
@@ -102,6 +102,7 @@ class Encoder:
             delta_below = np.dot(np.transpose(Wh), delta_2)
 
             delta_above = delta_below
+        return delta_below
 
 
 
