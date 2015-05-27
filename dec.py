@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
 # We're going to do this in two separate files
-# The decoder is just rnn.py?
 
-# But this is the encoder!
+# This is the decoder!
 
 # get it to learn the individual characters
 
@@ -30,9 +29,10 @@ class Decoder:
         sigma = .1
 
         self.params = {}
-        self.params['L'] = np.random.normal(0, sigma, (wdim, vdim)) # "wide" array
+        #self.params['L'] = np.random.normal(0, sigma, (wdim, vdim)) # "wide" array
         self.params['Wh'] = random_weight_matrix(hdim, hdim)
-        self.params['Wx'] = random_weight_matrix(hdim, wdim)
+        #self.params['Wx'] = random_weight_matrix(hdim, wdim)
+        # for now, not using xs
         self.params['b1'] = np.zeros(hdim)
         self.params['U'] = random_weight_matrix(outdim, hdim)
         self.params['b2'] = np.zeros(outdim)
@@ -50,26 +50,31 @@ class Decoder:
         # grads
         self.grads = {}
 
-    def f_prop(self, xs, ys):
+    def f_prop(self, xs, ys, h_in):
+        # TODO: add argument for hidden-layer passed up
         """Given a series of xs and a series of ys, returns hidden vector at
         end, and also the cost"""
         N = len(xs) # total num timesteps
-        L = self.params['L']
+        #L = self.params['L']
         Wh = self.params['Wh']
-        Wx = self.params['Wx']
+        #Wx = self.params['Wx']
         U = self.params['U']
         b1 = self.params['b1']
         b2 = self.params['b2']
-
-        self.hs = np.zeros([self.hdim, N+1])
+        
         self.yhats = np.zeros([self.outdim, N])
+        self.hs = np.zeros([self.hdim, N+1])
+        # np.random.seed(2234)
+        # self.hs[:,-1] = np.random.normal(0,.1,(self.hdim))
+        self.hs[:,-1] = h_in
 
         cost = 0
-
+        
         for t in xrange(N):
-            Lx = L[:,xs[t]]
+            #Lx = L[:,xs[t]]
             h_prev = self.hs[:,t-1]
-            z_1 = np.dot(Wh, h_prev) + np.dot(Wx, Lx) + b1
+            z_1 = np.dot(Wh, h_prev) + b1 #+ np.dot(Wx, Lx)
+            #print 'z_1',z_1
             h1 = np.maximum(z_1, 0)
             self.hs[:,t] = h1
             yhat = softmax(np.dot(U, h1) + b2)
@@ -78,17 +83,17 @@ class Decoder:
 
         return (self.hs[N-1], cost)
             
-    def b_prop(self, xs, ys, delta_decoder):
+    def b_prop(self, xs, ys):
 
-        L = self.params['L']
+        #L = self.params['L']
         Wh = self.params['Wh']
-        Wx = self.params['Wx']
+        #Wx = self.params['Wx']
         U = self.params['U']
         b1 = self.params['b1']
         b2 = self.params['b2']
         N = len(xs)
 
-        delta_above = delta_decoder
+        delta_above = np.zeros(self.hdim)
         for t in xrange(N-1,-1, -1):
             delta_3 = self.yhats[:,t] - make_onehot(ys[t], self.outdim)
             self.grads['U'] += np.outer(delta_3, self.hs[:,t])
@@ -97,8 +102,8 @@ class Decoder:
             delta_2 = dh * (self.hs[:,t] > 0)
             self.grads['b1'] += delta_2
             self.grads['Wh'] += np.outer(delta_2, self.hs[:,t-1])
-            self.grads['Wx'] += np.outer(delta_2, L[:,xs[t]])
-            self.grads['L'][:,xs[t]] += np.dot(np.transpose(Wx), delta_2)
+            #self.grads['Wx'] += np.outer(delta_2, L[:,xs[t]])
+            #self.grads['L'][:,xs[t]] += np.dot(np.transpose(Wx), delta_2)
             delta_below = np.dot(np.transpose(Wh), delta_2)
 
             delta_above = delta_below
@@ -116,13 +121,14 @@ class Decoder:
         tot_cost = 0.0
         batch_size = len(all_xs)
         for xs, ys in zip(all_xs, all_ys):
-            _, cost = self.f_prop(xs, ys)
+            np.random.seed(2234)
+            _, cost = self.f_prop(xs, ys, np.random.normal(0,.1,(self.hdim)))
             tot_cost += cost
-            self.b_prop(xs, ys, np.zeros(self.hdim))
+            self.b_prop(xs, ys)
 
         # Compute average cost
         avg_cost = tot_cost/batch_size
-        avg_cost += 0.5*self.rho*(np.sum(self.params['Wh']**2) + np.sum(self.params['Wx']**2) + np.sum(self.params['U']**2))
+        avg_cost += 0.5*self.rho*(np.sum(self.params['Wh']**2) + np.sum(self.params['U']**2))#+ np.sum(self.params['Wx']**2) 
 
         # Compute average grads
         for key in self.grads:
@@ -130,7 +136,7 @@ class Decoder:
 
         # Add regularization to grads
         self.grads['Wh'] += self.rho*self.params['Wh']
-        self.grads['Wx'] += self.rho*self.params['Wx']
+        #self.grads['Wx'] += self.rho*self.params['Wx']
         self.grads['U'] += self.rho*self.params['U']
         # print 'Avg Cost:', avg_cost
         return avg_cost
@@ -183,8 +189,9 @@ class Decoder:
                 it[0] = old_val
                 num_grad = float(high_cost - low_cost)/(2*h)
                 diff = grads[key][it.multi_index] - num_grad
-                if diff > 1e-4:
+                if abs(diff) > 1e-4:
                     print "Grad Check Failed -- error:", diff
+                    print "Numerical gradient:",num_grad,"predicted grad",grads[key][it.multi_index]
                 it.iternext()
         print "Grad Check Finished!"
 

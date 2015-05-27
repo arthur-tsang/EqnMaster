@@ -16,13 +16,13 @@ from misc import random_weight_matrix
 
 class Encoder:
 
-    def __init__(self, vdim, hdim, wdim, outdim,
+    def __init__(self, vdim, hdim, wdim,
                  alpha=0.005, rho = 0.0001, rseed=10):
 
         # Dimensions
         self.vdim = vdim
         self.hdim = hdim
-        self.outdim = outdim
+        self.vdim = vdim
         self.wdim = wdim
 
         # Parameters
@@ -34,8 +34,8 @@ class Encoder:
         self.params['Wh'] = random_weight_matrix(hdim, hdim)
         self.params['Wx'] = random_weight_matrix(hdim, wdim)
         self.params['b1'] = np.zeros(hdim)
-        self.params['U'] = random_weight_matrix(outdim, hdim)
-        self.params['b2'] = np.zeros(outdim)
+        self.params['U'] = random_weight_matrix(vdim, hdim)
+        self.params['b2'] = np.zeros(vdim)
 
         # Learning rate
         self.alpha = alpha
@@ -62,7 +62,7 @@ class Encoder:
         b2 = self.params['b2']
 
         self.hs = np.zeros([self.hdim, N+1])
-        self.yhats = np.zeros([self.outdim, N])
+        self.yhats = np.zeros([self.vdim, N])
 
         cost = 0
 
@@ -90,7 +90,7 @@ class Encoder:
 
         delta_above = delta_decoder
         for t in xrange(N-1,-1, -1):
-            delta_3 = self.yhats[:,t] - make_onehot(ys[t], self.outdim)
+            delta_3 = self.yhats[:,t] - make_onehot(ys[t], self.vdim)
             self.grads['U'] += np.outer(delta_3, self.hs[:,t])
             self.grads['b2'] += delta_3
             dh = np.dot(np.transpose(U), delta_3) + delta_above
@@ -182,7 +182,7 @@ class Encoder:
                 it[0] = old_val
                 num_grad = float(high_cost - low_cost)/(2*h)
                 diff = grads[key][it.multi_index] - num_grad
-                if diff > 1e-4:
+                if abs(diff) > 1e-4:
                     print "Grad Check Failed -- error:", diff
                 it.iternext()
         print "Grad Check Finished!"
