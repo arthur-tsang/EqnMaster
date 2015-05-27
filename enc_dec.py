@@ -1,3 +1,4 @@
+import pickle
 import numpy as np
 from enc import Encoder
 from dec import Decoder
@@ -81,8 +82,14 @@ class EncDec:
 
 
     def sgd(self, batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True):
-        # Implentation of SGD over all training data
+        """Implentation of minibatch SGD over all training data"""
 
+        # Helpers
+        def list_mask(full_list, mask):
+            # extracts indices from the full_list as per the mask
+            return [full_list[idx] for idx in mask]
+
+        # Actual code
         N = len(X_train)
         iterations_per_epoch = N / batch_size # using SGD
 
@@ -94,8 +101,10 @@ class EncDec:
 
                 # Sample a batch
                 batch_mask = np.random.choice(N, batch_size)
-                X_batch = X_train[batch_mask]
-                Y_batch = Y_train[batch_mask]
+                # X_batch = X_train[batch_mask] # this notation only works
+                # Y_batch = Y_train[batch_mask] # for numpy arrays (not lists)
+                X_batch = list_mask(X_train, batch_mask)
+                Y_batch = list_mask(Y_train, batch_mask)
                 avg_cost = self.process_batch(X_batch, Y_batch)
 
                 # Update with SGD
@@ -105,16 +114,18 @@ class EncDec:
             # Print progress
             if verbose:
                 print "Epoch", epoch
-                print "Training Cost:", self.process_batch(X_train, Y_train)
+                print "Training Cost (estimate):", self.process_batch(X_train[:100], Y_train[:100])
                 print "Dev Cost:", self.process_batch(X_dev, Y_dev)
 
 
     def grad_check(self, X, Y):
         # Grad-check of encoder decoder
+        # X: list of np.arrays of input sequences
+        # Y: list of np.arrays of output sequences
 
         # TODO: make it robust to single-example X and Y
         h = 1e-5
-        X = np.ndarray.astype(X, np.float)
+        X = [np.ndarray.astype(xs, np.float) for xs in X]
         self.process_batch(X, Y) # sets encoder.grads and decoder.grads
         params = {}
         for key in self.encoder.params:
@@ -152,7 +163,7 @@ class EncDec:
     # start/end tokens are at the end of vocabs)
     def save_model(self, file_name):
         with open(file_name, 'wb') as f:
-            pickle.save((self.encoder, self.decoder), f)
+            pickle.dump((self.encoder, self.decoder), f)
 
     # Load encoder/decoder from a file (Note that we assume that we remember
     # start/end tokens are at the end of vocabs)

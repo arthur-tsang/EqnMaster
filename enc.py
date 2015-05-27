@@ -206,7 +206,7 @@ class Encoder:
     # Save model (hyper)parameters to a file
     def save_model(self, file_name):
         with open(file_name, 'wb') as f:
-            pickle.save((self.params, self.alpha, self.rho), f)
+            pickle.dump((self.params, self.alpha, self.rho), f)
 
     # Load model (hyper)parameters to a file
     def load_model(self, file_name):

@@ -16,35 +16,41 @@ indico = {c:i for i,c in enumerate(invocab)}
 
 
 def decode(nr_string, dico):
-    return [dico[c] for c in nr_string]
+    return np.array([dico[c] for c in nr_string])
 
 def labelize(xy_data):
     # Go from tuples of strings to X and Y as lists of int labels
-    X = np.array([decode(x, indico) for x,y in xy_data])
-    Y = np.array([decode(y, outdico) for x,y in xy_data])
+    X = [decode(x, indico) for x,y in xy_data]
+    Y = [decode(y, outdico) for x,y in xy_data]
 
     return (X,Y)
 
 if __name__ == '__main__':
-    #train_data = get_data('data/train.txt')
-    #dev_data = get_data('data/dev.txt')
+    train_data = get_data('data/train.txt')
+    dev_data = get_data('data/dev.txt')
 
     #print 'len train', len(train_data)
 
-    #X_train, Y_train = labelize(train_data)
+    X_train, Y_train = labelize(train_data)
+    X_dev, Y_dev = labelize(dev_data)
 
     #print 'X_train', type(X_train), X_train
     # print 'Y_train', Y_train.shape, Y_train
     
-    X_train = np.array([[5, 4], [1,1]])
-    Y_train = np.array([[4, 3], [1,2]])
+    # X_train = np.array([[5, 4], [1,1]])
+    # Y_train = np.array([[4, 3], [1,2]])
 
     hdim = 10
     wdim = 10
+    batch_size = 5
+    n_epochs = 30
     
-    ed = EncDec(vdim, hdim, wdim, outdim, rho = 0)
-    # ed.grad_check(X_train[:1], Y_train[:1])
-    # ed.grad_check(X_train[1:], Y_train[1:])
-    ed.grad_check(X_train, Y_train)
+    
+    ed = EncDec(vdim, hdim, wdim, outdim)
+    #ed.grad_check(X_train[:10], Y_train[:10])
+    ed.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=X_dev, Y_dev=Y_dev, verbose=True)
+    ed.save_model('models/ed_simple.p')
+
+
     
     
