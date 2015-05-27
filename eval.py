@@ -4,12 +4,14 @@
 
 # This file is temporarily closed for renovation (metaphorically speaking
 
+import os.path
+import pickle
+from enc_dec import EncDec
 from naive_rnnlm import NaiveRnnlm
 from naive_rnnlm_discr import NaiveRnnlmDiscr
 from baseline import BigramBaseline
 from misc import lengthen, get_data
-import os.path
-import pickle
+
 
 def bool_metric(correct, given):
     return int(correct == given)
@@ -46,8 +48,13 @@ if __name__ == '__main__':
 
     
 
+    
+    print 'Dev set scores'
+    ed = EncDec(12,10,10,10) # TODO: remove magic numbers
+    ed.load_model('models/ed_simple.p')
 
-    # print 'Dev set scores'
+    
+    
 
     # # bigram baseline part
     # bb = BigramBaseline()
@@ -63,7 +70,7 @@ if __name__ == '__main__':
     # nr_test('rnn_naive_discr.txt', dev_data_discr, True)
 
 
-    # print 'Train set scores'
+    print 'Train set scores'
     # # bigram baseline part
     # print 'bb eval:', eval_model(bb.predict_one, train_data)
     

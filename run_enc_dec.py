@@ -15,13 +15,16 @@ outdico = {c:i for i,c in enumerate(outvocab)}
 indico = {c:i for i,c in enumerate(invocab)}
 
 
-def decode(nr_string, dico):
+def encode(nr_string, dico):
     return np.array([dico[c] for c in nr_string])
+
+def decode(labels, vocab):
+    return ''.join(vocab[label] if label<len(vocab) else '</s>' for label in labels)
 
 def labelize(xy_data):
     # Go from tuples of strings to X and Y as lists of int labels
-    X = [decode(x, indico) for x,y in xy_data]
-    Y = [decode(y, outdico) for x,y in xy_data]
+    X = [encode(x, indico) for x,y in xy_data]
+    Y = [encode(y, outdico) for x,y in xy_data]
 
     return (X,Y)
 
@@ -47,10 +50,10 @@ if __name__ == '__main__':
     
     
     ed = EncDec(vdim, hdim, wdim, outdim)
+    
     #ed.grad_check(X_train[:10], Y_train[:10])
-    ed.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=X_dev, Y_dev=Y_dev, verbose=True)
-    ed.save_model('models/ed_simple.p')
+    #ed.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=X_dev, Y_dev=Y_dev, verbose=True)
+    #ed.save_model('models/ed_simple.p')
 
-
-    
-    
+    ed.load_model('models/ed_simple.p')
+    print '5+15=',ed.generate_answer(encode('5+15', outvocab))

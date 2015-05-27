@@ -50,6 +50,17 @@ class EncDec:
     	self.encoder.b_prop(enc_xs, enc_ys, delta_decoder)
 
 
+    def generate_answer(self, xs, maxlen = 50):
+        """Generates answer for a given list of input labels"""
+
+    	enc_xs = np.concatenate(([self.v_start], xs))
+    	enc_ys = np.concatenate((xs, [self.v_end]))
+
+        hidden, _ = self.encoder.f_prop(enc_xs, enc_ys)
+        outputs = self.decoder.generate_answer(hidden, maxlen, self.out_end)
+
+        return outputs
+
     def process_batch(self, all_xs, all_ys):
 
     	# Make sure all gradients are initialized to zero
@@ -159,14 +170,14 @@ class EncDec:
                 it.iternext()
         print "Grad Check Finished!"
 
-    # Save encoder/decoder to a file (Note that we assume that we remember
-    # start/end tokens are at the end of vocabs)
     def save_model(self, file_name):
+        # Save encoder/decoder to a file (Note that we assume that we remember
+        # start/end tokens are at the end of vocabs)
         with open(file_name, 'wb') as f:
             pickle.dump((self.encoder, self.decoder), f)
 
-    # Load encoder/decoder from a file (Note that we assume that we remember
-    # start/end tokens are at the end of vocabs)
     def load_model(self, file_name):
+        # Load encoder/decoder from a file (Note that we assume that we remember
+        # start/end tokens are at the end of vocabs)
         with open(file_name, 'rb') as f:
             self.encoder, self.decoder = pickle.load(f)
