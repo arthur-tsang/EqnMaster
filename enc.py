@@ -63,7 +63,6 @@ class Encoder:
 
         self.hs = np.zeros([self.hdim, N+1])
         self.yhats = np.zeros([self.vdim, N])
-
         cost = 0
 
         for t in xrange(N):
@@ -75,8 +74,7 @@ class Encoder:
             yhat = softmax(np.dot(U, h1) + b2)
             self.yhats[:,t] = yhat
             cost += -np.log(yhat[ys[t]])
-
-        return (self.hs[N-1], cost)
+        return (self.hs[:, N-1], cost)
             
     def b_prop(self, xs, ys, delta_decoder):
 
@@ -134,6 +132,18 @@ class Encoder:
         # print 'Avg Cost:', avg_cost
         return avg_cost
 
+
+    def regularize(self):
+        self.grads['Wh'] += self.rho*self.params['Wh']
+        self.grads['Wx'] += self.rho*self.params['Wx']
+        self.grads['U'] += self.rho*self.params['U']
+
+        reg_cost = 0.5*self.rho*(np.sum(self.params['Wh']**2) + np.sum(self.params['Wx']**2) + np.sum(self.params['U']**2))
+        return reg_cost
+
+    def update_parameters(self):
+        for key in self.params:
+            self.params[key] += -1*self.alpha*self.grads[key]
  
         
     def sgd(self, batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True):

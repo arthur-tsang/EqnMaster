@@ -15,14 +15,12 @@ from misc import random_weight_matrix
 
 class Decoder:
 
-    def __init__(self, vdim, hdim, wdim, outdim,
+    def __init__(self, hdim, outdim,
                  alpha=0.005, rho = 0.0001, rseed=10):
 
         # Dimensions
-        self.vdim = vdim
         self.hdim = hdim
         self.outdim = outdim
-        self.wdim = wdim
 
         # Parameters
         np.random.seed(rseed)
@@ -50,11 +48,11 @@ class Decoder:
         # grads
         self.grads = {}
 
-    def f_prop(self, xs, ys, h_in):
+    def f_prop(self, ys, h_in):
         # TODO: add argument for hidden-layer passed up
         """Given a series of xs and a series of ys, returns hidden vector at
         end, and also the cost"""
-        N = len(xs) # total num timesteps
+        N = len(ys) # total num timesteps
         #L = self.params['L']
         Wh = self.params['Wh']
         #Wx = self.params['Wx']
@@ -71,19 +69,18 @@ class Decoder:
         cost = 0
         
         for t in xrange(N):
-            #Lx = L[:,xs[t]]
             h_prev = self.hs[:,t-1]
             z_1 = np.dot(Wh, h_prev) + b1 #+ np.dot(Wx, Lx)
-            #print 'z_1',z_1
             h1 = np.maximum(z_1, 0)
             self.hs[:,t] = h1
             yhat = softmax(np.dot(U, h1) + b2)
             self.yhats[:,t] = yhat
             cost += -np.log(yhat[ys[t]])
 
-        return (self.hs[N-1], cost)
+        return cost
+
             
-    def b_prop(self, xs, ys):
+    def b_prop(self, ys):
 
         #L = self.params['L']
         Wh = self.params['Wh']
@@ -91,7 +88,7 @@ class Decoder:
         U = self.params['U']
         b1 = self.params['b1']
         b2 = self.params['b2']
-        N = len(xs)
+        N = len(ys)
 
         delta_above = np.zeros(self.hdim)
         for t in xrange(N-1,-1, -1):
@@ -110,8 +107,32 @@ class Decoder:
         return delta_below
 
 
+    def generate_answer(self, h_in, max_len, end_token):
+        # Generate an answer based on the input hidden vector
+        # (presumably produced by encoder)
 
-    def process_batch(self, all_xs, all_ys):
+        Wh = self.params['Wh']
+        U = self.params['U']
+        b1 = self.params['b1']
+        b2 = self.params['b2']
+        h_prev = h_in
+        outputs = []
+
+        # Loop until max number of times, or end token is reached
+        for i in xrange(max_len):
+            z_1 = np.dot(Wh, h_prev) + b1
+            h1 = np.maximum(z_1, 0)
+            h_prev = h1
+            yhat = softmax(np.dot(U, h1) + b2)
+            answer = np.argmax(yhat)
+            ouputs.append(answer)
+            if answer == end_token:
+                break
+
+        return outputs
+
+
+    def process_batch(self, all_ys):
 
         for key in self.params:
             self.grads[key] = np.zeros(self.params[key].shape)
@@ -119,12 +140,12 @@ class Decoder:
         # Processes a single batch of input data; returns
         # the average cost, and updates gradients.
         tot_cost = 0.0
-        batch_size = len(all_xs)
-        for xs, ys in zip(all_xs, all_ys):
+        batch_size = len(all_ys)
+        for ys in all_ys:
             np.random.seed(2234)
-            _, cost = self.f_prop(xs, ys, np.random.normal(0,.1,(self.hdim)))
+            _, cost = self.f_prop(ys, np.random.normal(0,.1,(self.hdim)))
             tot_cost += cost
-            self.b_prop(xs, ys)
+            self.b_prop(ys)
 
         # Compute average cost
         avg_cost = tot_cost/batch_size
@@ -141,12 +162,24 @@ class Decoder:
         # print 'Avg Cost:', avg_cost
         return avg_cost
 
+
+    def regularize(self):
+        self.grads['Wh'] += self.rho*self.params['Wh']
+        self.grads['U'] += self.rho*self.params['U']
+
+        reg_cost = 0.5*self.rho*(np.sum(self.params['Wh']**2) + np.sum(self.params['U']**2))
+        return reg_cost
+
+
+    def update_parameters(self):
+        for key in self.params:
+            self.params[key] += -1*self.alpha*self.grads[key]
  
         
-    def sgd(self, batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True):
+    def sgd(self, batch_size, n_epochs, Y_train, Y_dev=None, verbose=True):
         # Implentation of SGD over all training data
 
-        N = len(X_train)
+        N = len(Y_train)
         iterations_per_epoch = N / batch_size # using SGD
 
         # 1 epoch is 1 pass over training data
@@ -157,9 +190,8 @@ class Decoder:
 
                 # Sample a batch
                 batch_mask = np.random.choice(N, batch_size)
-                X_batch = X_train[batch_mask]
                 Y_batch = Y_train[batch_mask]
-                avg_cost = self.process_batch(X_batch, Y_batch)
+                avg_cost = self.process_batch(Y_batch)
 
                 # Update with SGD
                 for key in self.params:
@@ -168,14 +200,13 @@ class Decoder:
             # Print progress
             if verbose:
                 print "Epoch", epoch
-                print "Training Cost:", self.process_batch(X_train, Y_train)
-                print "Dev Cost:", self.process_batch(X_dev, Y_dev)
+                print "Training Cost:", self.process_batch(Y_train)
+                print "Dev Cost:", self.process_batch(Y_dev)
 
     
-    def grad_check(self, X, Y):
+    def grad_check(self, Y):
         h = 1e-5
-        X = np.ndarray.astype(X, np.float)
-        self.process_batch(X, Y)
+        self.process_batch(Y)
         grads = dict(self.grads)
         for key in self.params:
             print 'Gradient check for ', key
@@ -183,9 +214,9 @@ class Decoder:
             while not it.finished:
                 old_val = it[0].copy()
                 it[0] = old_val - h
-                low_cost = self.process_batch(X, Y)
+                low_cost = self.process_batch(Y)
                 it[0] = old_val + h
-                high_cost = self.process_batch(X, Y)
+                high_cost = self.process_batch(Y)
                 it[0] = old_val
                 num_grad = float(high_cost - low_cost)/(2*h)
                 diff = grads[key][it.multi_index] - num_grad
