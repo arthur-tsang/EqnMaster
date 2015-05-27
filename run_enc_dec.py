@@ -56,4 +56,4 @@ if __name__ == '__main__':
     #ed.save_model('models/ed_simple.p')
 
     ed.load_model('models/ed_simple.p')
-    print '5+15=',ed.generate_answer(encode('5+15', outvocab))
+    print '5+15=',decode(ed.generate_answer(encode('5+15', indico)), outvocab)

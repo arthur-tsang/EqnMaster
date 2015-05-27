@@ -124,7 +124,7 @@ class Decoder:
             h_prev = h1
             yhat = softmax(np.dot(U, h1) + b2)
             answer = np.argmax(yhat)
-            ouputs.append(answer)
+            outputs.append(answer)
             if answer == end_token:
                 break
 
