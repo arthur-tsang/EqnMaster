@@ -42,7 +42,9 @@ if __name__ == '__main__':
     hdim = 10
     wdim = 10
     
-    ed = EncDec(vdim, hdim, wdim, outdim)
+    ed = EncDec(vdim, hdim, wdim, outdim, rho = 0)
+    # ed.grad_check(X_train[:1], Y_train[:1])
+    # ed.grad_check(X_train[1:], Y_train[1:])
     ed.grad_check(X_train, Y_train)
     
     

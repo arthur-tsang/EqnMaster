@@ -145,34 +145,40 @@ class Encoder:
         for key in self.params:
             self.params[key] += -1*self.alpha*self.grads[key]
  
+
+    def divide_grads(self, batch_size):
+        # For batch training, divide all grad-sums by batch-size
+        for key in self.grads:
+            self.grads[key] /= float(batch_size)
+
         
-    def sgd(self, batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True):
-        # Implentation of SGD over all training data
+    # def sgd(self, batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True):
+    #     # Implentation of SGD over all training data
 
-        N = len(X_train)
-        iterations_per_epoch = N / batch_size # using SGD
+    #     N = len(X_train)
+    #     iterations_per_epoch = N / batch_size # using SGD
 
-        # 1 epoch is 1 pass over training data
-        for epoch in xrange(n_epochs):
+    #     # 1 epoch is 1 pass over training data
+    #     for epoch in xrange(n_epochs):
 
-            # For every sub-iteration
-            for i in xrange(iterations_per_epoch):
+    #         # For every sub-iteration
+    #         for i in xrange(iterations_per_epoch):
 
-                # Sample a batch
-                batch_mask = np.random.choice(N, batch_size)
-                X_batch = X_train[batch_mask]
-                Y_batch = Y_train[batch_mask]
-                avg_cost = self.process_batch(X_batch, Y_batch)
+    #             # Sample a batch
+    #             batch_mask = np.random.choice(N, batch_size)
+    #             X_batch = X_train[batch_mask]
+    #             Y_batch = Y_train[batch_mask]
+    #             avg_cost = self.process_batch(X_batch, Y_batch)
 
-                # Update with SGD
-                for key in self.params:
-                    self.params[key] += -1*self.alpha*self.grads[key]
+    #             # Update with SGD
+    #             for key in self.params:
+    #                 self.params[key] += -1*self.alpha*self.grads[key]
 
-            # Print progress
-            if verbose:
-                print "Epoch", epoch
-                print "Training Cost:", self.process_batch(X_train, Y_train)
-                print "Dev Cost:", self.process_batch(X_dev, Y_dev)
+    #         # Print progress
+    #         if verbose:
+    #             print "Epoch", epoch
+    #             print "Training Cost:", self.process_batch(X_train, Y_train)
+    #             print "Dev Cost:", self.process_batch(X_dev, Y_dev)
 
     
     def grad_check(self, X, Y):

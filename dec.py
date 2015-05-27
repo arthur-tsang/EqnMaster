@@ -49,7 +49,6 @@ class Decoder:
         self.grads = {}
 
     def f_prop(self, ys, h_in):
-        # TODO: add argument for hidden-layer passed up
         """Given a series of xs and a series of ys, returns hidden vector at
         end, and also the cost"""
         N = len(ys) # total num timesteps
@@ -175,33 +174,38 @@ class Decoder:
         for key in self.params:
             self.params[key] += -1*self.alpha*self.grads[key]
  
-        
-    def sgd(self, batch_size, n_epochs, Y_train, Y_dev=None, verbose=True):
-        # Implentation of SGD over all training data
+    def divide_grads(self, batch_size):
+        # For batch training, divide all grad-sums by batch-size
+        for key in self.grads:
+            self.grads[key] /= float(batch_size)
 
-        N = len(Y_train)
-        iterations_per_epoch = N / batch_size # using SGD
+    
+    # def sgd(self, batch_size, n_epochs, Y_train, Y_dev=None, verbose=True):
+    #     # Implentation of SGD over all training data
 
-        # 1 epoch is 1 pass over training data
-        for epoch in xrange(n_epochs):
+    #     N = len(Y_train)
+    #     iterations_per_epoch = N / batch_size # using SGD
 
-            # For every sub-iteration
-            for i in xrange(iterations_per_epoch):
+    #     # 1 epoch is 1 pass over training data
+    #     for epoch in xrange(n_epochs):
 
-                # Sample a batch
-                batch_mask = np.random.choice(N, batch_size)
-                Y_batch = Y_train[batch_mask]
-                avg_cost = self.process_batch(Y_batch)
+    #         # For every sub-iteration
+    #         for i in xrange(iterations_per_epoch):
 
-                # Update with SGD
-                for key in self.params:
-                    self.params[key] += -1*self.alpha*self.grads[key]
+    #             # Sample a batch
+    #             batch_mask = np.random.choice(N, batch_size)
+    #             Y_batch = Y_train[batch_mask]
+    #             avg_cost = self.process_batch(Y_batch)
 
-            # Print progress
-            if verbose:
-                print "Epoch", epoch
-                print "Training Cost:", self.process_batch(Y_train)
-                print "Dev Cost:", self.process_batch(Y_dev)
+    #             # Update with SGD
+    #             for key in self.params:
+    #                 self.params[key] += -1*self.alpha*self.grads[key]
+
+    #         # Print progress
+    #         if verbose:
+    #             print "Epoch", epoch
+    #             print "Training Cost:", self.process_batch(Y_train)
+    #             print "Dev Cost:", self.process_batch(Y_dev)
 
     
     def grad_check(self, Y):

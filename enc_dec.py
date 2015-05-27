@@ -39,8 +39,6 @@ class EncDec:
     	return dec_cost + enc_cost
 
 
-
-
     def b_prop(self, xs, ys):
     	#Backward propagation through decoder and encoder
     	dec_ys = np.concatenate((ys, [self.out_end]))
@@ -68,6 +66,11 @@ class EncDec:
             tot_cost += cost
             self.b_prop(xs, ys)
 
+        # every time we ran backprop, we just added to the gradients,
+        # so here we divide by batch_size
+        self.encoder.divide_grads(batch_size)
+        self.decoder.divide_grads(batch_size)
+        
         enc_reg_cost = self.encoder.regularize()
         dec_reg_cost = self.decoder.regularize()
 
@@ -112,7 +115,7 @@ class EncDec:
         # TODO: make it robust to single-example X and Y
         h = 1e-5
         X = np.ndarray.astype(X, np.float)
-        self.process_batch(X, Y)
+        self.process_batch(X, Y) # sets encoder.grads and decoder.grads
         params = {}
         for key in self.encoder.params:
         	params['e_' + key] = self.encoder.params[key]
@@ -141,6 +144,7 @@ class EncDec:
                 diff = grads[key][it.multi_index] - num_grad
                 if abs(diff) > 1e-4:
                     print "Grad Check Failed -- error:", diff
+                    print "Numerical gradient:",num_grad,"predicted grad",grads[key][it.multi_index]
                 it.iternext()
         print "Grad Check Finished!"
 
