@@ -2,6 +2,8 @@
 
 # Here, we evaluate the models according to the dev sets
 
+# This file is temporarily closed for renovation (metaphorically speaking
+
 from naive_rnnlm import NaiveRnnlm
 from naive_rnnlm_discr import NaiveRnnlmDiscr
 from baseline import BigramBaseline
@@ -42,30 +44,33 @@ if __name__ == '__main__':
     train_data_discr = get_data('data/neg_train.txt')
     dev_data_discr = get_data('data/neg_dev.txt')
 
-    print 'Dev set scores'
-
-    # bigram baseline part
-    bb = BigramBaseline()
-    bb.learn(train_data)
-    print 'bb eval:', eval_model(bb.predict_one, dev_data)
     
-    # naive rnn part
-    nr_test('rnn_naive.txt', dev_data)
-    nr_test('rnn_naive_oracle.txt', dev_data)
-    nr_test('rnn_naive_oracle_bptt.txt', dev_data)
-    nr_test('rnn_naive_rot.txt', dev_data)
-    nr_test('rnn_naive_rot_bptt.txt', dev_data)
-    nr_test('rnn_naive_discr.txt', dev_data_discr, True)
 
 
-    print 'Train set scores'
-    # bigram baseline part
-    print 'bb eval:', eval_model(bb.predict_one, train_data)
+    # print 'Dev set scores'
+
+    # # bigram baseline part
+    # bb = BigramBaseline()
+    # bb.learn(train_data)
+    # print 'bb eval:', eval_model(bb.predict_one, dev_data)
     
-    # naive rnn part
-    nr_test('rnn_naive.txt', train_data)
-    nr_test('rnn_naive_oracle.txt', train_data)
-    nr_test('rnn_naive_oracle_bptt.txt', train_data)
-    nr_test('rnn_naive_rot.txt', train_data)
-    nr_test('rnn_naive_rot_bptt.txt', train_data)
-    nr_test('rnn_naive_discr.txt', train_data_discr, True)
+    # # naive rnn part
+    # nr_test('rnn_naive.txt', dev_data)
+    # nr_test('rnn_naive_oracle.txt', dev_data)
+    # nr_test('rnn_naive_oracle_bptt.txt', dev_data)
+    # nr_test('rnn_naive_rot.txt', dev_data)
+    # nr_test('rnn_naive_rot_bptt.txt', dev_data)
+    # nr_test('rnn_naive_discr.txt', dev_data_discr, True)
+
+
+    # print 'Train set scores'
+    # # bigram baseline part
+    # print 'bb eval:', eval_model(bb.predict_one, train_data)
+    
+    # # naive rnn part
+    # nr_test('rnn_naive.txt', train_data)
+    # nr_test('rnn_naive_oracle.txt', train_data)
+    # nr_test('rnn_naive_oracle_bptt.txt', train_data)
+    # nr_test('rnn_naive_rot.txt', train_data)
+    # nr_test('rnn_naive_rot_bptt.txt', train_data)
+    # nr_test('rnn_naive_discr.txt', train_data_discr, True)

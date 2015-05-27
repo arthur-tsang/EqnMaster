@@ -107,6 +107,9 @@ class EncDec:
 
 
     def grad_check(self, X, Y):
+        # Grad-check of encoder decoder
+
+        # TODO: make it robust to single-example X and Y
         h = 1e-5
         X = np.ndarray.astype(X, np.float)
         self.process_batch(X, Y)
