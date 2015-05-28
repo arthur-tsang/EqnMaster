@@ -29,31 +29,28 @@ def labelize(xy_data):
     return (X,Y)
 
 if __name__ == '__main__':
-    train_data = get_data('data/train.txt')
-    dev_data = get_data('data/dev.txt')
-
-    #print 'len train', len(train_data)
+    ## Data
+    train_data = get_data('data/2dig_train.p')
+    dev_data = get_data('data/2dig_dev.p')
 
     X_train, Y_train = labelize(train_data)
     X_dev, Y_dev = labelize(dev_data)
 
-    #print 'X_train', type(X_train), X_train
-    # print 'Y_train', Y_train.shape, Y_train
-    
-    # X_train = np.array([[5, 4], [1,1]])
-    # Y_train = np.array([[4, 3], [1,2]])
-
+    ## Hyperparameters
     hdim = 10
     wdim = 10
     batch_size = 5
-    n_epochs = 30
+    n_epochs = 100
     
-    
+    ## EncDec model train
     ed = EncDec(vdim, hdim, wdim, outdim)
-    
-    #ed.grad_check(X_train[:10], Y_train[:10])
-    #ed.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=X_dev, Y_dev=Y_dev, verbose=True)
-    #ed.save_model('models/ed_simple.p')
-
+    # ed.grad_check(X_train[:10], Y_train[:10])
     ed.load_model('models/ed_simple.p')
-    print '5+15=',decode(ed.generate_answer(encode('5+15', indico)), outvocab)
+    ed.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=X_dev, Y_dev=Y_dev, verbose=True)
+    ed.save_model('models/ed_simple.p')
+    ## EncDec model test
+    toy_problems = ['5+15','17+98','7+7','3+7']
+    #ed.load_model('models/ed_simple.p')
+
+    for toy in toy_problems:
+        print toy+'=',decode(ed.generate_answer(encode(toy, indico)), outvocab)
