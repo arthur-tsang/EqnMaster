@@ -36,8 +36,18 @@ def align_metric(correct, given):
     score = sum(int(c == g) for c,g in zip(r_correct, r_given))
     score /= float(len(correct)) # normalize points
 
+    print 'correct',correct,'given',given
+
     return score
     
+def num_metric(correct, given):
+    """Count raw distance away from the correct answer"""
+    n_correct = int(correct)
+    n_given = int(given)
+    diff = abs(n_correct - n_given)
+
+    return diff
+
 
 def eval_model(predict_fn, xy_data, metric = align_metric):
     scores = [metric(y, predict_fn(x)) for x,y in xy_data]
@@ -60,7 +70,8 @@ if __name__ == '__main__':
     dev_data = get_data('data/dev.txt')
     train_data_discr = get_data('data/neg_train.txt')
     dev_data_discr = get_data('data/neg_dev.txt')
-
+    train_data_short = get_data('data/2dig_train.p')
+    dev_data_short = get_data('data/2dig_dev.p')
     
 
     
@@ -68,14 +79,14 @@ if __name__ == '__main__':
     ed = EncDec(12,10,10,10) # TODO: remove magic numbers
     ed.load_model('models/ed_simple.p')
     ed_fn = lambda x : ed_solve(ed, x)
-    print 'ed dev', eval_model(ed_fn, dev_data)
+    print 'ed dev', eval_model(ed_fn, dev_data_short, num_metric)
     
     
 
     # bigram baseline part
     bb = BigramBaseline()
     bb.learn(train_data)
-    print 'bb dev', eval_model(bb.predict_one, dev_data)
+    #print 'bb dev', eval_model(bb.predict_one, dev_data)
     
     # # naive rnn part
     # nr_test('rnn_naive.txt', dev_data)
@@ -87,11 +98,11 @@ if __name__ == '__main__':
 
 
     print 'Train set scores'
-    print 'ed train', eval_model(ed_fn, train_data)
+    print 'ed train', eval_model(ed_fn, train_data_short, num_metric)
 
     
     # # bigram baseline part
-    print 'bb train', eval_model(bb.predict_one, train_data)
+    #print 'bb train', eval_model(bb.predict_one, train_data)
     
     # # naive rnn part
     # nr_test('rnn_naive.txt', train_data)
