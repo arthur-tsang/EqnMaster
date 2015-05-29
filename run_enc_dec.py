@@ -19,7 +19,7 @@ def encode(nr_string, dico):
     return np.array([dico[c] for c in nr_string])
 
 def decode(labels, vocab):
-    return ''.join(vocab[label] if label<len(vocab) else '</s>' for label in labels)
+    return ''.join(vocab[label] for label in labels if label<len(vocab))
 
 def labelize(xy_data):
     # Go from tuples of strings to X and Y as lists of int labels
@@ -27,6 +27,9 @@ def labelize(xy_data):
     Y = [encode(y, outdico) for x,y in xy_data]
 
     return (X,Y)
+
+def ed_solve(ed, in_string):
+    return decode(ed.generate_answer(encode(in_string, indico)), outvocab)
 
 if __name__ == '__main__':
     ## Data
@@ -45,12 +48,12 @@ if __name__ == '__main__':
     ## EncDec model train
     ed = EncDec(vdim, hdim, wdim, outdim)
     # ed.grad_check(X_train[:10], Y_train[:10])
-    ed.load_model('models/ed_simple.p')
-    ed.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=X_dev, Y_dev=Y_dev, verbose=True)
-    ed.save_model('models/ed_simple.p')
+    # ed.load_model('models/ed_simple.p')
+    # ed.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=X_dev, Y_dev=Y_dev, verbose=True)
+    # ed.save_model('models/ed_simple.p')
     ## EncDec model test
     toy_problems = ['5+15','17+98','7+7','3+7']
-    #ed.load_model('models/ed_simple.p')
+    ed.load_model('models/ed_simple.p')
 
     for toy in toy_problems:
-        print toy+'=',decode(ed.generate_answer(encode(toy, indico)), outvocab)
+        print toy,'=',decode(ed.generate_answer(encode(toy, indico)), outvocab)
