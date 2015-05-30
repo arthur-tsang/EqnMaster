@@ -36,7 +36,7 @@ def align_metric(correct, given):
     score = sum(int(c == g) for c,g in zip(r_correct, r_given))
     score /= float(len(correct)) # normalize points
 
-    print 'correct',correct,'given',given
+    # print 'correct',correct,'given',given
 
     return score
     
@@ -66,8 +66,8 @@ def eval_model(predict_fn, xy_data, metric = align_metric):
 #         print 'nr at', rnns_file, 'not found'
 
 if __name__ == '__main__':
-    train_data = get_data('data/train.txt')
-    dev_data = get_data('data/dev.txt')
+    train_data = get_data('data/3dig_train.p')
+    dev_data = get_data('data/3dig_dev.p')
     train_data_discr = get_data('data/neg_train.txt')
     dev_data_discr = get_data('data/neg_dev.txt')
     train_data_short = get_data('data/2dig_train.p')
@@ -79,7 +79,11 @@ if __name__ == '__main__':
     ed = EncDec(12,10,10,10) # TODO: remove magic numbers
     ed.load_model('models/ed_simple.p')
     ed_fn = lambda x : ed_solve(ed, x)
-    print 'ed dev', eval_model(ed_fn, dev_data_short, num_metric)
+    print 'ed dev', eval_model(ed_fn, dev_data_short)
+    ed2 = EncDec(12,10,10,10)
+    ed2.load_model('models/ed_full.p')
+    ed2_fn = lambda x : ed_solve(ed2, x)
+    print 'ed2 dev', eval_model(ed2_fn, dev_data)
     
     
 
@@ -98,7 +102,8 @@ if __name__ == '__main__':
 
 
     print 'Train set scores'
-    print 'ed train', eval_model(ed_fn, train_data_short, num_metric)
+    print 'ed train', eval_model(ed_fn, train_data_short)
+    print 'ed2 train', eval_model(ed2_fn, train_data) # 3-digit ed
 
     
     # # bigram baseline part

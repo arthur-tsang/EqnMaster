@@ -1,0 +1,2 @@
+class LSTMDec:
+    pass
