@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # We're going to do this in two separate files
 # The decoder is just rnn.py?
 

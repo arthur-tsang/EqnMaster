@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # We're going to do this in two separate files
 
 # This is the decoder!
