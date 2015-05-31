@@ -78,3 +78,4 @@ if __name__ == '__main__':
 """
 # TODO: how should we account for this?
 # Remark: theano has something called local_log_softmax (stabilitzes softmax so it doesn't have us take the log of 0)
+# :)
