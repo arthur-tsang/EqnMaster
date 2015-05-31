@@ -32,8 +32,8 @@ class Encoder:
         self.params['Wh'] = random_weight_matrix(hdim, hdim)
         self.params['Wx'] = random_weight_matrix(hdim, wdim)
         self.params['b1'] = np.zeros(hdim)
-        self.params['U'] = random_weight_matrix(vdim, hdim)
-        self.params['b2'] = np.zeros(vdim)
+        # self.params['U'] = random_weight_matrix(vdim, hdim)
+        # self.params['b2'] = np.zeros(vdim)
 
         # Learning rate
         self.alpha = alpha
@@ -48,19 +48,19 @@ class Encoder:
         # grads
         self.grads = {}
 
-    def f_prop(self, xs, ys):
+    def f_prop(self, xs):
         """Given a series of xs and a series of ys, returns hidden vector at
         end, and also the cost"""
         N = len(xs) # total num timesteps
         L = self.params['L']
         Wh = self.params['Wh']
         Wx = self.params['Wx']
-        U = self.params['U']
+        # U = self.params['U']
         b1 = self.params['b1']
-        b2 = self.params['b2']
+        # b2 = self.params['b2']
 
         self.hs = np.zeros([self.hdim, N+1])
-        self.yhats = np.zeros([self.vdim, N])
+        # self.yhats = np.zeros([self.vdim, N])
         cost = 0
 
         for t in xrange(N):
@@ -69,27 +69,28 @@ class Encoder:
             z_1 = np.dot(Wh, h_prev) + np.dot(Wx, Lx) + b1
             h1 = np.maximum(z_1, 0)
             self.hs[:,t] = h1
-            yhat = softmax(np.dot(U, h1) + b2)
-            self.yhats[:,t] = yhat
-            cost += -np.log(yhat[ys[t]])
-        return (self.hs[:, N-1], cost)
+            # yhat = softmax(np.dot(U, h1) + b2)
+            # self.yhats[:,t] = yhat
+            # cost += -np.log(yhat[ys[t]])
+        return self.hs[:, N-1]
             
-    def b_prop(self, xs, ys, delta_decoder):
+    def b_prop(self, xs, delta_decoder):
 
         L = self.params['L']
         Wh = self.params['Wh']
         Wx = self.params['Wx']
-        U = self.params['U']
+        # U = self.params['U']
         b1 = self.params['b1']
-        b2 = self.params['b2']
+        # b2 = self.params['b2']
         N = len(xs)
 
         delta_above = delta_decoder
         for t in xrange(N-1,-1, -1):
-            delta_3 = self.yhats[:,t] - make_onehot(ys[t], self.vdim)
-            self.grads['U'] += np.outer(delta_3, self.hs[:,t])
-            self.grads['b2'] += delta_3
-            dh = np.dot(np.transpose(U), delta_3) + delta_above
+            # delta_3 = self.yhats[:,t] - make_onehot(ys[t], self.vdim)
+            # self.grads['U'] += np.outer(delta_3, self.hs[:,t])
+            # self.grads['b2'] += delta_3
+            # dh = np.dot(np.transpose(U), delta_3) + delta_above
+            dh = delta_above
             delta_2 = dh * (self.hs[:,t] > 0)
             self.grads['b1'] += delta_2
             self.grads['Wh'] += np.outer(delta_2, self.hs[:,t-1])
@@ -101,7 +102,7 @@ class Encoder:
 
 
 
-    def process_batch(self, all_xs, all_ys):
+    def process_batch(self, all_xs):
 
         for key in self.params:
             self.grads[key] = np.zeros(self.params[key].shape)
@@ -110,14 +111,13 @@ class Encoder:
         # the average cost, and updates gradients.
         tot_cost = 0.0
         batch_size = len(all_xs)
-        for xs, ys in zip(all_xs, all_ys):
-            _, cost = self.f_prop(xs, ys)
-            tot_cost += cost
-            self.b_prop(xs, ys, np.zeros(self.hdim))
+        for xs in all_xs:
+            self.f_prop(xs)
+            self.b_prop(xs, np.zeros(self.hdim))
 
         # Compute average cost
         avg_cost = tot_cost/batch_size
-        avg_cost += 0.5*self.rho*(np.sum(self.params['Wh']**2) + np.sum(self.params['Wx']**2) + np.sum(self.params['U']**2))
+        avg_cost += 0.5*self.rho*(np.sum(self.params['Wh']**2) + np.sum(self.params['Wx']**2))
 
         # Compute average grads
         for key in self.grads:
@@ -126,7 +126,7 @@ class Encoder:
         # Add regularization to grads
         self.grads['Wh'] += self.rho*self.params['Wh']
         self.grads['Wx'] += self.rho*self.params['Wx']
-        self.grads['U'] += self.rho*self.params['U']
+        # self.grads['U'] += self.rho*self.params['U']
         # print 'Avg Cost:', avg_cost
         return avg_cost
 
@@ -134,9 +134,10 @@ class Encoder:
     def regularize(self):
         self.grads['Wh'] += self.rho*self.params['Wh']
         self.grads['Wx'] += self.rho*self.params['Wx']
-        self.grads['U'] += self.rho*self.params['U']
+        # self.grads['U'] += self.rho*self.params['U']
 
-        reg_cost = 0.5*self.rho*(np.sum(self.params['Wh']**2) + np.sum(self.params['Wx']**2) + np.sum(self.params['U']**2))
+        # reg_cost = 0.5*self.rho*(np.sum(self.params['Wh']**2) + np.sum(self.params['Wx']**2) + np.sum(self.params['U']**2))
+        reg_cost = 0.5*self.rho*(np.sum(self.params['Wh']**2) + np.sum(self.params['Wx']**2))
         return reg_cost
 
     def update_parameters(self):
@@ -179,10 +180,10 @@ class Encoder:
     #             print "Dev Cost:", self.process_batch(X_dev, Y_dev)
 
     
-    def grad_check(self, X, Y):
+    def grad_check(self, X):
         h = 1e-5
         X = np.ndarray.astype(X, np.float)
-        self.process_batch(X, Y)
+        self.process_batch(X)
         grads = dict(self.grads)
         for key in self.params:
             print 'Gradient check for ', key
@@ -190,9 +191,9 @@ class Encoder:
             while not it.finished:
                 old_val = it[0].copy()
                 it[0] = old_val - h
-                low_cost = self.process_batch(X, Y)
+                low_cost = self.process_batch(X)
                 it[0] = old_val + h
-                high_cost = self.process_batch(X, Y)
+                high_cost = self.process_batch(X)
                 it[0] = old_val
                 num_grad = float(high_cost - low_cost)/(2*h)
                 diff = grads[key][it.multi_index] - num_grad

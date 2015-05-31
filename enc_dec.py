@@ -14,14 +14,14 @@ class EncDec:
     	# Note that vdim is size of encoder's output, whereas outdim is size
     	# of decoder's output (doesn't include +, *,- etc.)
 
-    	vdim = vdim + 2
+    	vdim = vdim
     	outdim = outdim + 1
     	self.encoder = Encoder(vdim, hdim, wdim, alpha=alpha, rho=rho, rseed=rseed)
     	self.decoder = Decoder(hdim, outdim, alpha=alpha, rho=rho, rseed=rseed)
 
     	# Positions in the vocabs for start/end tokens
-    	self.v_start = vdim - 2
-    	self.v_end = vdim - 1
+    	# self.v_start = vdim - 2
+    	# self.v_end = vdim - 1
     	self.out_end = outdim - 1
 
 
@@ -29,15 +29,15 @@ class EncDec:
     	#Forward propagation through encoder and decoder
 
     	# Assume that xs does not contain start/end tokens
-    	enc_xs = np.concatenate(([self.v_start], xs))
-    	enc_ys = np.concatenate((xs, [self.v_end]))
-    	enc_hidden, enc_cost = self.encoder.f_prop(enc_xs, enc_ys)
+    	# enc_xs = np.concatenate(([self.v_start], xs))
+    	# enc_ys = np.concatenate((xs, [self.v_end]))
+    	enc_hidden = self.encoder.f_prop(xs)
     	# print enc_hidden.shape
 
     	dec_ys = np.concatenate((ys, [self.out_end]))
     	dec_cost = self.decoder.f_prop(dec_ys, enc_hidden)
 
-    	return dec_cost + enc_cost
+    	return dec_cost
 
 
     def b_prop(self, xs, ys):
@@ -45,18 +45,18 @@ class EncDec:
     	dec_ys = np.concatenate((ys, [self.out_end]))
     	delta_decoder = self.decoder.b_prop(dec_ys)
 
-    	enc_xs = np.concatenate(([self.v_start], xs))
-    	enc_ys = np.concatenate((xs, [self.v_end]))
-    	self.encoder.b_prop(enc_xs, enc_ys, delta_decoder)
+    	# enc_xs = np.concatenate(([self.v_start], xs))
+    	# enc_ys = np.concatenate((xs, [self.v_end]))
+    	self.encoder.b_prop(xs, delta_decoder)
 
 
     def generate_answer(self, xs, maxlen = 50):
         """Generates answer for a given list of input labels"""
 
-    	enc_xs = np.concatenate(([self.v_start], xs))
-    	enc_ys = np.concatenate((xs, [self.v_end]))
+    	# enc_xs = np.concatenate(([self.v_start], xs))
+    	# enc_ys = np.concatenate((xs, [self.v_end]))
 
-        hidden, _ = self.encoder.f_prop(enc_xs, enc_ys)
+        hidden = self.encoder.f_prop(xs)
         outputs = self.decoder.generate_answer(hidden, maxlen, self.out_end)
 
         return outputs
@@ -95,6 +95,8 @@ class EncDec:
     def sgd(self, batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True):
         """Implentation of minibatch SGD over all training data"""
 
+        print 'Training:'
+        print 'Train Set Size:', len(Y_train)
         # Helpers
         def list_mask(full_list, mask):
             # extracts indices from the full_list as per the mask
@@ -106,10 +108,9 @@ class EncDec:
 
         # 1 epoch is 1 pass over training data
         for epoch in xrange(n_epochs):
-
             # For every sub-iteration
             for i in xrange(iterations_per_epoch):
-
+                # print i
                 # Sample a batch
                 batch_mask = np.random.choice(N, batch_size)
                 # X_batch = X_train[batch_mask] # this notation only works
@@ -123,10 +124,11 @@ class EncDec:
                 self.decoder.update_parameters()
 
             # Print progress
-            if verbose:
+            if verbose and (epoch % 10) == 0:
                 print "Epoch", epoch
-                print "Training Cost (estimate):", self.process_batch(X_train[:100], Y_train[:100])
-                print "Dev Cost:", self.process_batch(X_dev, Y_dev)
+                print "Training Cost (estimate):", self.process_batch(X_train[:50], Y_train[:50])
+                if X_dev is not None:
+                    print "Dev Cost:", self.process_batch(X_dev, Y_dev)
 
 
     def grad_check(self, X, Y):
