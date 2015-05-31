@@ -61,7 +61,8 @@ if __name__ == '__main__':
     ed.load_model(model_filename)
     
     L = ed.encoder.params['L']
-    pca_visualize(np.transpose(L), invocab)
+    svd_visualize(np.transpose(L), invocab)
+    #pca_visualize(np.transpose(L), invocab)
     #multi_tsne(np.transpose(L), invocab)
 
     # for toy in toy_problems:
