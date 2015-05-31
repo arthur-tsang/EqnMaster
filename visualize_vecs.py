@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def svd_visualize(L):
+def svd_visualize(L, labels, outfile='figs/svd.jpg'):
         """Visualize L, which we assume is given as an np array of rows"""
 	U, S, V = np.linalg.svd(L)
 	#datapoints = U[:,:2]
@@ -13,7 +13,14 @@ def svd_visualize(L):
         fig = plt.figure()
         fig.suptitle('Word vectors SVD')
         plt.scatter(data_x, data_y)
-        fig.savefig('figs/svd.jpg')
+
+        # Annotate (i.e. label the scatter-points)
+        for x,y,char in zip(data_x, data_y, labels):
+                plt.annotate(char, xy=(x,y))
+        
+
+        if outfile is not None:
+                fig.savefig(outfile)
         plt.show()
 
         # TODO: annotate points

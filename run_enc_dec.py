@@ -4,6 +4,7 @@ import numpy as np
 
 from enc_dec import EncDec
 from misc import get_data
+from visualize_vecs import svd_visualize
 
 # Keep track of vocab as a string of certain characters
 outvocab = '0123456789'
@@ -52,12 +53,15 @@ if __name__ == '__main__':
     ed = EncDec(vdim, hdim, wdim, outdim)
     #ed.grad_check(X_train[:10], Y_train[:10])
     # ed.load_model(model_filename) # if retraining
-    ed.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=X_dev, Y_dev=Y_dev, verbose=True)
-    ed.save_model(model_filename)
+    # ed.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=X_dev, Y_dev=Y_dev, verbose=True)
+    # ed.save_model(model_filename)
 
     ## EncDec model test
     # toy_problems = ['5+15','17+98','7+7','3+7']
-    # ed.load_model(model_filename)
+    ed.load_model(model_filename)
+    
+    L = ed.encoder.params['L']
+    svd_visualize(np.transpose(L), invocab)
 
     # for toy in toy_problems:
     #     print toy,'=',ed_solve(ed, toy)
