@@ -4,7 +4,7 @@ import numpy as np
 
 from enc_dec import EncDec
 from misc import get_data
-from visualize_vecs import svd_visualize
+from visualize_vecs import svd_visualize, tsne_visualize, multi_tsne
 
 # Keep track of vocab as a string of certain characters
 outvocab = '0123456789'
@@ -61,7 +61,8 @@ if __name__ == '__main__':
     ed.load_model(model_filename)
     
     L = ed.encoder.params['L']
-    svd_visualize(np.transpose(L), invocab)
+    # tsne_visualize(np.transpose(L), invocab)
+    multi_tsne(np.transpose(L), invocab)
 
     # for toy in toy_problems:
     #     print toy,'=',ed_solve(ed, toy)
