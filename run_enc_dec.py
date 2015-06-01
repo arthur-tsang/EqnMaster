@@ -63,8 +63,13 @@ if __name__ == '__main__':
     toy_problems = [decode(x, invocab) for x in X_train]
     # toy_problems = ['5+15','17+98','7+7','3+7']
     
-    for toy in toy_problems:
-        print toy,'=',ed_solve(ed, toy)
+    L = ed.encoder.params['L']
+    #svd_visualize(np.transpose(L), invocab)
+    pca_visualize(np.transpose(L), invocab)
+    #multi_tsne(np.transpose(L), invocab)
+
+    # for toy in toy_problems:
+    #     print toy,'=',ed_solve(ed, toy)
 
 # Note that we can get the following kind of error during training:
 """

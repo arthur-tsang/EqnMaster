@@ -23,6 +23,7 @@ def svd_visualize(L, labels, outfile='figs/svd.jpg'):
         data_x = U[:,0]
         data_y = U[:,1]
 
+        #plt.xkcd() # Yes!
         fig = plt.figure()
         fig.suptitle('Word vectors SVD')
 
@@ -63,23 +64,23 @@ def multi_tsne(L, labels):
                 tsne_visualize(L, labels, perplexity=perplexity)
 
 def pca_visualize(L, labels, outfile = 'figs/pca.jpg'):
-        pca = decomposition.PCA(n_components = 1)
+        pca = decomposition.PCA(n_components = 3)
         pca.fit(L)
         points = pca.transform(L)
         points = np.array(points)
 
         print points
 
-        data_x = points[:,0]
-        data_y = [0 for _ in data_x]
-        #data_x, data_y, data_z = points[:,0], points[:,1], points[:,2]
+        # data_x = points[:,0]
+        # data_y = [0 for _ in data_x]
+        data_x, data_y, data_z = points[:,0], points[:,1], points[:,2]
 
         fig = plt.figure()
-        #ax = fig.add_subplot(111, projection='3d')
+        ax = fig.add_subplot(111, projection='3d')
         fig.suptitle('Word vectors PCA')
 
-        #ax.scatter(data_x, data_y, data_z)
-        annotate(data_x, data_y, labels)
+        ax.scatter(data_x, data_y, data_z)
+        #annotate(data_x, data_y, labels)
 
         # save file
         if outfile is not None:
