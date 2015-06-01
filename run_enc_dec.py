@@ -4,7 +4,7 @@ import numpy as np
 
 from enc_dec import EncDec
 from misc import get_data
-from visualize_vecs import svd_visualize, tsne_visualize, multi_tsne, pca_visualize
+# from visualize_vecs import svd_visualize, tsne_visualize, multi_tsne, pca_visualize
 
 # Keep track of vocab as a string of certain characters
 outvocab = '0123456789'
@@ -44,28 +44,27 @@ if __name__ == '__main__':
     X_dev, Y_dev = labelize(dev_data)
 
     ## Hyperparameters
-    hdim = 10
-    wdim = 10
-    batch_size = 5
-    n_epochs = 50
+    hdim = 50
+    wdim = 50
+    batch_size = 1000
+    n_epochs = 5000
+
+    X_train = X_train[:1000]
+    Y_train = Y_train[:1000]
     
     ## EncDec model train
-    ed = EncDec(vdim, hdim, wdim, outdim)
+    ed = EncDec(vdim, hdim, wdim, outdim, alpha=0.001, rho = 0.0000)
     #ed.grad_check(X_train[:10], Y_train[:10])
-    # ed.load_model(model_filename) # if retraining
-    # ed.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=X_dev, Y_dev=Y_dev, verbose=True)
-    # ed.save_model(model_filename)
+    ed.load_model(model_filename) # if retraining
+    ed.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True)
+    ed.save_model(model_filename)
 
     ## EncDec model test
+    toy_problems = [decode(x, invocab) for x in X_train]
     # toy_problems = ['5+15','17+98','7+7','3+7']
-    ed.load_model(model_filename)
     
-    L = ed.encoder.params['L']
-    pca_visualize(np.transpose(L), invocab)
-    #multi_tsne(np.transpose(L), invocab)
-
-    # for toy in toy_problems:
-    #     print toy,'=',ed_solve(ed, toy)
+    for toy in toy_problems:
+        print toy,'=',ed_solve(ed, toy)
 
 # Note that we can get the following kind of error during training:
 """
