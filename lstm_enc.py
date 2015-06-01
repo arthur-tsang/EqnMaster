@@ -19,7 +19,6 @@ class LSTMEnc:
 
         # Parameters
         np.random.seed(rseed)
-        sigma = .1
 
         # Learning rate
         self.alpha = alpha
