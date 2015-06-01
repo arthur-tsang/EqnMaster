@@ -1,6 +1,6 @@
 import numpy as np
 import theano.tensor as T
-from theano import function, shared, scan
+from theano import function, shared, scan, pp
 from theano.tensor.nnet import sigmoid, softmax
 
 from misc import random_weight_matrix
@@ -57,14 +57,14 @@ class LSTMDec:
         self.dU  = shared(np.zeros((hdim, hdim)), name='dU')
         self.db  = shared(np.zeros(outdim), name='db')
 
-        self.params = [self.Ui, self.Uf, self.Uo, self.Uc, self.U, self.db]
+        self.params = [self.Ui, self.Uf, self.Uo, self.Uc, self.U, self.b]
 
         # self.params = [self.L, self.Wi, self.Ui, self.Wf, self.Uf, self.Wo, self.Uo, self.Wc, self.Uc, self.U, self.db]
         self.dparams = [self.dUi, self.dUf, self.dUo, self.dUc, self.dU, self.db]
         # self.dparams = [self.dL, self.dWi, self.dUi, self.dWf, self.dUf, self.dWo, self.dUo, self.dWc, self.dUc, self.dU, self.db]
 
         self.f_prop_function = self.compile_f_prop() 
-        # self.b_prop_function = self.compile_b_prop()
+        self.b_prop_function = self.compile_b_prop()
 
 
     def reset_grads(self):
@@ -129,7 +129,6 @@ class LSTMDec:
         
     def f_prop(self, ys, ch_prev):
         final_cost = self.f_prop_function(ys, ch_prev)
-        print final_cost
         return final_cost
 
 
@@ -141,8 +140,14 @@ class LSTMDec:
         return new_dparams
         
     def compile_b_prop(self):
-        cost_final = T.scalar('cost_final')
-        return function([cost_final], self.symbolic_b_prop(cost_final))
+        # cost_final is symbolic (output of symbolic_f_prop)
+        ch_prev = T.vector('ch_prev')
+        ys = T.ivector('ys')
+        cost_final = self.symbolic_f_prop(ys, ch_prev)
+
+        print 'cost final', pp(cost_final), cost_final.type
+
+        return function([], self.symbolic_b_prop(cost_final))
 
     def b_prop(self, cost_final):
         new_dparams = self.b_prop_function(cost_final)
@@ -150,21 +155,28 @@ class LSTMDec:
             dparam.set_value(new_dparam + dparam.get_value())
 
 
+    # # new approach
+    # def b_prop(self, cost_final_numeric):
+    #     new_dparams = []
+    #     for param in self.params:
+    #         new_dparams.append(T.grad(cost_final, param))
+        
+
 
     # TODO: write a decode_sequence function
 
 
 if __name__ == '__main__':
     print 'Sanity check'
-    le = LSTMDec(10,10,10)
+    ld = LSTMDec(10,10,10)
     ys = [1,2,3,4]
-    ch_prev = np.ones(2*le.hdim)
-    ch = le.f_prop(ys, ch_prev)
-    # print ch
+    ch_prev = np.ones(2*ld.hdim)
+    cost_final = ld.f_prop(ys, ch_prev)
+    print cost_final
+    
+    #ld.b_prop(cost_final)
 
+    #self.b_prop_function
 
-
-
-
-
-
+# The following might be related to my gradient problem right now
+# http://tiku.io/questions/2870308/defining-a-gradient-with-respect-to-a-subtensor-in-theano
