@@ -63,21 +63,22 @@ class LSTMEncDec:
         return ys
 
     def compile_generate(self):
-        xs = T.vector('xs')
+        xs = T.ivector('xs')
         f = function([xs], self.symbolic_generate(xs))
         return f
 
-    def generate(xs):
+    def generate(self, xs):
         return self.generate_function(xs)
 
 
     def update_params(self, dec_enc_new_dparams):
         """Updates params of both decoder and encoder according to deltas given"""
         for param, dparam in zip(self.decoder.params + self.encoder.params, dec_enc_new_dparams):
-            param.set_value(param.get_value() + dparam)
+            param.set_value(param.get_value() - self.alpha * dparam)
 
-    def process_batch(self, all_xs, all_ys):
-        """Don't worry about end token to use this function"""
+    def process_batch(self, all_xs, all_ys, shouldUpdate = True):
+        """Don't worry about end token to use this function!
+        Also this function does all the updates for you"""
         assert(len(all_xs) > 0)
         # or else just return 0 without updating
 
@@ -99,12 +100,47 @@ class LSTMEncDec:
         e_reg_updates, e_reg_cost = self.encoder.reg_updates_cost()
         d_reg_updates, d_reg_cost = self.decoder.reg_updates_cost()
 
-        self.update_params(dparams_avg)
-        self.update_params(d_reg_updates + e_reg_updates)
+        if shouldUpdate:
+            self.update_params(dparams_avg)
+            self.update_params(d_reg_updates + e_reg_updates)
         
         final_cost = float(tot_cost) / batch_size + e_reg_cost + d_reg_cost
         
         return final_cost
+
+    def sgd(self, batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True):
+        """Implentation of minibatch SGD over all training data (copied from enc_dec)"""
+
+        print 'Training:'
+        print 'Train Set Size:', len(Y_train)
+        # Helpers
+        def list_mask(full_list, mask):
+            # extracts indices from the full_list as per the mask
+            return [full_list[idx] for idx in mask]
+
+        # Actual code
+        N = len(X_train)
+        iterations_per_epoch = N / batch_size # using SGD
+
+        # 1 epoch is 1 pass over training data
+        for epoch in xrange(n_epochs):
+            # For every sub-iteration
+            for i in xrange(iterations_per_epoch):
+                # print i
+                # Sample a batch
+                batch_mask = np.random.choice(N, batch_size)
+                # X_batch = X_train[batch_mask] # this notation only works
+                # Y_batch = Y_train[batch_mask] # for numpy arrays (not lists)
+                X_batch = list_mask(X_train, batch_mask)
+                Y_batch = list_mask(Y_train, batch_mask)
+                avg_cost = self.process_batch(X_batch, Y_batch, shouldUpdate = True) # takes care of sgd
+
+            # Print progress
+            if verbose and (epoch % 10) == 0:
+                print "Epoch", epoch
+                print "Training Cost (estimate):", self.process_batch(X_train[:50], Y_train[:50], shouldUpdate = False)
+                if X_dev is not None:
+                    print "Dev Cost:", self.process_batch(X_dev, Y_dev, shouldUpdate = False)
 
 if __name__ == '__main__':
     lstm = LSTMEncDec(12,12,12,12)
@@ -114,4 +150,6 @@ if __name__ == '__main__':
     cost2 = lstm.process_batch([[1,2,3]],[[2,2,2]])
     cost3 = lstm.process_batch([[1,2,3],[2,2,2]], [[3,2],[0,0]])
     print cost1, cost2, cost3
+    print lstm.generate([1,2,3])
+    lstm.sgd(2, 2, [[1,2,3], [4,5], [3,4]], [[3,3], [2], [1]])
     print 'all done'
