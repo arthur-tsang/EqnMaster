@@ -13,7 +13,8 @@ class LSTMEncDec:
         self.vdim = vdim
         self.hdim = hdim
         self.wdim = wdim
-        self.outdim = outdim
+        self.outdim = outdim + 1
+        self.out_end = self.outdim - 1 # idx of end token
 
         # others (I don't think we'll need these, save for saving/loading)
         self.alpha = alpha
@@ -21,8 +22,8 @@ class LSTMEncDec:
         self.rseed = rseed
 
         # sub-models
-        self.encoder = LSTMEnc(vdim, hdim, wdim, alpha=alpha, rho=rho, rseed=rseed)
-        self.decoder = LSTMDec(hdim, outdim, alpha=alpha, rho=rho, rseed=rseed)
+        self.encoder = LSTMEnc(self.vdim, self.hdim, self.wdim, alpha=alpha, rho=rho, rseed=rseed)
+        self.decoder = LSTMDec(self.hdim, self.outdim, alpha=alpha, rho=rho, rseed=rseed)
         
         # compiled functions
         print 'about to compile'
@@ -49,10 +50,12 @@ class LSTMEncDec:
         new_dparams = self.symbolic_b_prop(cost)
 
         return function([xs, ys], [cost] + new_dparams)
-        
-    # TODO: worry about end token
-    # TODO: write a generator
 
+    def both_prop(self, xs, ys):
+        """Like f_prop, but also returns updates for bprop"""
+        return self.both_prop_compiled(xs, ys + [self.out_end])
+        
+    # TODO: write a generator
 
     def update_params(self, dec_enc_new_dparams):
         """Updates params of both decoder and encoder according to deltas given"""
@@ -67,7 +70,7 @@ class LSTMEncDec:
         tot_cost = 0.0
         batch_size = len(all_xs)
         for xs, ys in zip(all_xs, all_ys):
-            cost_and_dparams = self.both_prop_compiled(xs, ys)
+            cost_and_dparams = self.both_prop(xs, ys)
             cost = cost_and_dparams[0]
             dparams = cost_and_dparams[1:]
             
@@ -92,7 +95,8 @@ if __name__ == '__main__':
     lstm = LSTMEncDec(12,12,12,12)
 
     print 'processing batch'
-    #cost = lstm.process_batch([[1,2,3]],[[2,2,2]])
+    cost = lstm.process_batch([[3,2]],[[0,0]])
+    cost = lstm.process_batch([[1,2,3]],[[2,2,2]])
     cost = lstm.process_batch([[1,2,3],[2,2,2]], [[3,2],[0,0]])
     print cost
     print 'all done'
