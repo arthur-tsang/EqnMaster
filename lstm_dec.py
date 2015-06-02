@@ -141,6 +141,7 @@ class LSTMDec:
     def symbolic_b_prop(self, cost_final):
         new_dparams = []
         for param in self.params:
+            print cost_final.type, param.type
             new_dparams.append(T.grad(cost_final, param))
 
         return new_dparams
