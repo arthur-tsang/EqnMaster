@@ -42,17 +42,17 @@ class LSTMEnc:
         self.Wc = shared(random_weight_matrix(hdim, wdim), name='Wc')
         self.Uc = shared(random_weight_matrix(hdim, hdim), name='Uc')
 
-        self.dL = shared(np.zeros(wdim, vdim), name='dL')
+        self.dL = shared(np.zeros((wdim, vdim)), name='dL')
         # W: times character-vector, U: times previous-hidden-vector
         # i: input, f: forget, o: output, c: new-cell
-        self.dWi = shared(np.zeros(hdim, wdim), name='dWi')
-        self.dUi = shared(np.zeros(hdim, hdim), name='dUi')
-        self.dWf = shared(np.zeros(hdim, wdim), name='dWf')
-        self.dUf = shared(np.zeros(hdim, hdim), name='dUf')
-        self.dWo = shared(np.zeros(hdim, wdim), name='dWo')
-        self.dUo = shared(np.zeros(hdim, hdim), name='dUo')
-        self.dWc = shared(np.zeros(hdim, wdim), name='dWc')
-        self.dUc = shared(np.zeros(hdim, hdim), name='dUc')
+        self.dWi = shared(np.zeros((hdim, wdim)), name='dWi')
+        self.dUi = shared(np.zeros((hdim, hdim)), name='dUi')
+        self.dWf = shared(np.zeros((hdim, wdim)), name='dWf')
+        self.dUf = shared(np.zeros((hdim, hdim)), name='dUf')
+        self.dWo = shared(np.zeros((hdim, wdim)), name='dWo')
+        self.dUo = shared(np.zeros((hdim, hdim)), name='dUo')
+        self.dWc = shared(np.zeros((hdim, wdim)), name='dWc')
+        self.dUc = shared(np.zeros((hdim, hdim)), name='dUc')
 
         self.params = [self.L, self.Wi, self.Ui, self.Wf, self.Uf, self.Wo, self.Uo, self.Wc, self.Uc]
         self.dparams = [self.dL, self.dWi, self.dUi, self.dWf, self.dUf, self.dWo, self.dUo, self.dWc, self.dUc]
@@ -109,21 +109,24 @@ class LSTMEnc:
     def f_prop(self, xs):
         return self.f_prop_function(xs,np.zeros(2*self.hdim))
 
-    def symbolic_b_prop(self, cost_final):
-        new_dparams = []
-        for param in self.params:
-            new_dparams.append(T.grad(cost_final, param))
+    # def symbolic_b_prop(self, xs, ch_prev):
+    #     cost_final = self.symbolic_f_prop(xs, ch_prev)
 
-        return new_dparams
+    #     new_dparams = []
+    #     for param in self.params:
+    #         new_dparams.append(T.grad(cost_final, param))
+
+    #     return new_dparams
         
-    def compile_b_prop(self):
-        cost_final = T.scalar('cost_final')
-        return function([cost_final], self.symbolic_b_prop(cost_final))
+    # def compile_b_prop(self):
+    #     xs = T.ivector('xs')
+    #     ch_prev = T.vector('ch_prev')
+    #     return function([xs, ch_prev], self.symbolic_b_prop(xs, ch_prev))
 
-    def b_prop(self, cost_final):
-        new_dparams = self.b_prop_function(cost_final)
-        for dparam, new_dparam in zip(self.dparams, new_dparams):
-            dparam.set_value(new_dparam + dparam.get_value())
+    # def b_prop(self, xs, ch_prev):
+    #     new_dparams = self.b_prop_function(xs, ch_prev)
+    #     for dparam, new_dparam in zip(self.dparams, new_dparams):
+    #         dparam.set_value(new_dparam + dparam.get_value())
         
 
 
@@ -133,3 +136,4 @@ if __name__ == '__main__':
     xs = [1,2,3]
     ch = le.f_prop(xs)
     print ch
+    

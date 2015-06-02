@@ -5,9 +5,9 @@ from theano.tensor.nnet import sigmoid, softmax
 
 from misc import random_weight_matrix
 
-# For debugging:
-from theano import config
-config.exception_verbosity = 'high'
+# # For debugging:
+# from theano import config
+# config.exception_verbosity = 'high'
 
 rng = np.random
 
@@ -146,6 +146,8 @@ class LSTMDec:
         
     def compile_b_prop(self):
         # cost_final is symbolic (output of symbolic_f_prop)
+        # TODO: would the function be faster if it took in hs?
+        # TODO: also, make sure this doesn't take too long (on order 10s right now for me)
         ch_prev = T.vector('ch_prev')
         ys = T.ivector('ys')
         cost_final = self.symbolic_f_prop(ys, ch_prev)
