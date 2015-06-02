@@ -28,6 +28,7 @@ class LSTMEncDec:
         # compiled functions
         print 'about to compile'
         self.both_prop_compiled = self.compile_both()
+        self.generate_function = self.compile_generate()
         print 'done compiling'
 
     def symbolic_f_prop(self, xs, ys):
@@ -55,7 +56,20 @@ class LSTMEncDec:
         """Like f_prop, but also returns updates for bprop"""
         return self.both_prop_compiled(xs, ys + [self.out_end])
         
-    # TODO: write a generator
+
+    def symbolic_generate(self, xs):
+        ch = self.encoder.symbolic_f_prop(xs, np.zeros(2*self.hdim))
+        ys = self.decoder.symbolic_generate(ch)
+        return ys
+
+    def compile_generate(self):
+        xs = T.vector('xs')
+        f = function([xs], self.symbolic_generate(xs))
+        return f
+
+    def generate(xs):
+        return self.generate_function(xs)
+
 
     def update_params(self, dec_enc_new_dparams):
         """Updates params of both decoder and encoder according to deltas given"""
@@ -63,8 +77,9 @@ class LSTMEncDec:
             param.set_value(param.get_value() + dparam)
 
     def process_batch(self, all_xs, all_ys):
+        """Don't worry about end token to use this function"""
         assert(len(all_xs) > 0)
-        # or else just return 0
+        # or else just return 0 without updating
 
         all_dparams = []
         tot_cost = 0.0
@@ -95,8 +110,8 @@ if __name__ == '__main__':
     lstm = LSTMEncDec(12,12,12,12)
 
     print 'processing batch'
-    cost = lstm.process_batch([[3,2]],[[0,0]])
-    cost = lstm.process_batch([[1,2,3]],[[2,2,2]])
-    cost = lstm.process_batch([[1,2,3],[2,2,2]], [[3,2],[0,0]])
-    print cost
+    cost1 = lstm.process_batch([[3,2]],[[0,0]])
+    cost2 = lstm.process_batch([[1,2,3]],[[2,2,2]])
+    cost3 = lstm.process_batch([[1,2,3],[2,2,2]], [[3,2],[0,0]])
+    print cost1, cost2, cost3
     print 'all done'

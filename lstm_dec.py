@@ -1,6 +1,6 @@
 import numpy as np
 import theano.tensor as T
-from theano import function, shared, scan, pp
+from theano import function, shared, scan, pp, scan_module
 from theano.tensor.nnet import sigmoid, softmax
 
 from misc import random_weight_matrix
@@ -19,6 +19,7 @@ class LSTMDec:
         # Dimensions
         self.hdim = hdim
         self.outdim = outdim
+        self.out_end = outdim # the end token
 
         # Parameters
         np.random.seed(rseed)
@@ -44,6 +45,10 @@ class LSTMDec:
 
         self.params = [self.Ui, self.Uf, self.Uo, self.Uc, self.U, self.b]
 
+        # # symbolic generate
+        # ch_prev = T.vector('ch_prev')
+        # self.generate_function = function([ch_prev], self.symbolic_generate(ch_prev))
+        # print 'done compiling'
 
     def reset_grads(self):
         """Resets all grads to zero (maintaining shape!)"""
@@ -112,18 +117,69 @@ class LSTMDec:
 
         return new_dparams
         
-    # TODO: write a decode_sequence function
+    def lstm_output(self, y_prev, ch_prev):
+        """calculates info to pass to next time step.
+        x_t is a scalar; ch_prev is a vector of size 2*hdim"""
+
+        c_prev = ch_prev[:self.hdim]#T.vector('c_prev')
+        h_prev = ch_prev[self.hdim:]#T.vector('h_prev')
+
+        # gates (input, forget, output)
+        i_t = sigmoid(T.dot(self.Ui, h_prev))
+        f_t = sigmoid(T.dot(self.Uf, h_prev))
+        o_t = sigmoid(T.dot(self.Uo, h_prev))
+        # new memory cell
+        c_new_t = T.tanh(T.dot(self.Uc, h_prev))
+        # final memory cell
+        c_t = f_t * c_prev + i_t * c_new_t
+        # final hidden state
+        h_t = o_t * T.tanh(c_t)
+
+        # Input vector for softmax
+        theta_t = T.dot(self.U, h_t) + self.b
+        # Softmax prob vector
+        y_hat_t = softmax(theta_t)
+        # Softmax wraps output in another list, why??
+        # (specifically it outputs a 2-d row, not a 1-d column)
+        y_hat_t = y_hat_t[0]
+        # Compute new cost
+        out_label = T.argmax(y_hat_t)
+
+        # final joint state
+        ch_t = T.concatenate([c_t, h_t])
+
+        return (out_label, ch_t), scan_module.until(T.eq(out_label, self.out_end))
+
+    def symbolic_generate(self, ch_prev):
+        """generate ys from a given ch_prev"""
+
+        results, updates = scan(fn = self.lstm_output, 
+                                outputs_info = [np.int64(0), ch_prev],
+                                n_steps = 50)
+
+
+        return results[0]
+        
+    # def generate(self, ch_prev):
+    #     return self.generate_function(ch_prev)
+
 
 
 if __name__ == '__main__':
     print 'Sanity check'
     ld = LSTMDec(10,10,10)
-    ys = [1,2,3,4]
-    ch_prev = np.ones(2*ld.hdim)
-    cost_final = ld.f_prop(ys, ch_prev)
-    print cost_final
+    # ys = [1,2,3,4]
+    # ch_prev = np.ones(2*ld.hdim)
+    # cost_final = ld.f_prop(ys, ch_prev)
+    # print cost_final
     
-    ld.b_prop(ys, ch_prev)
-    print 'printing dparams'
-    for dparam in ld.dparams:
-        print dparam.get_value()
+    # ld.b_prop(ys, ch_prev)
+    # print 'printing dparams'
+    # for dparam in ld.dparams:
+    #     print dparam.get_value()
+
+    print 'testing generate'
+    print ld.generate(np.ones(2*ld.hdim))
+    print 'done testing'
+
+    
