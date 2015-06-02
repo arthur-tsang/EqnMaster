@@ -67,7 +67,7 @@ class LSTMEncDec:
         f = function([xs], self.symbolic_generate(xs))
         return f
 
-    def generate(self, xs):
+    def generate_answer(self, xs):
         return self.generate_function(xs)
 
 
@@ -150,6 +150,6 @@ if __name__ == '__main__':
     cost2 = lstm.process_batch([[1,2,3]],[[2,2,2]])
     cost3 = lstm.process_batch([[1,2,3],[2,2,2]], [[3,2],[0,0]])
     print cost1, cost2, cost3
-    print lstm.generate([1,2,3])
+    print lstm.generate_answer([1,2,3])
     lstm.sgd(2, 2, [[1,2,3], [4,5], [3,4]], [[3,3], [2], [1]])
     print 'all done'

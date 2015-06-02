@@ -4,7 +4,7 @@ import numpy as np
 
 from enc_dec import EncDec
 from misc import get_data
-# from visualize_vecs import svd_visualize, tsne_visualize, multi_tsne, pca_visualize
+from visualize_vecs import svd_visualize, tsne_visualize, multi_tsne, pca_visualize
 
 # Keep track of vocab as a string of certain characters
 outvocab = '0123456789'
