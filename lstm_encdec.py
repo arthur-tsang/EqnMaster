@@ -25,7 +25,6 @@ class LSTMEncDec:
         self.decoder = LSTMDec(hdim, outdim, alpha=alpha, rho=rho, rseed=rseed)
         
         # compiled functions
-        #self.f_prop_function = compile_f_prop()
         print 'about to compile'
         self.both_prop_compiled = self.compile_both()
         print 'done compiling'
@@ -35,26 +34,11 @@ class LSTMEncDec:
         cost = self.decoder.symbolic_f_prop(ys, hidden_inter)
         return cost
 
-    # def compile_f_prop(self):
-    #     xs = T.ivector('xs')
-    #     ys = T.ivector('ys')
-        
-    #     return function([xs, ys], self.symbolic_f_prop(xs, ys))
-        
-    # def f_prop(self, xs, ys):
-    #     # TODO: take care of end token
-    #     return self.f_prop_function(xs, ys)
-
     def symbolic_b_prop(self, cost):
         dec_new_dparams = self.decoder.symbolic_b_prop(cost)
         enc_new_dparams = self.encoder.symbolic_b_prop(cost)
 
-        # print 'symbolic bprop shapes', dec_new_dparams[0].shape
-
         return dec_new_dparams + enc_new_dparams # python-list concatenation
-
-    # def regularization_cost(self):
-    #     return 
 
     def compile_both(self):
         """Compiles a function that computes both cost and deltas at the same time"""
@@ -66,6 +50,9 @@ class LSTMEncDec:
 
         return function([xs, ys], [cost] + new_dparams)
         
+    # TODO: worry about end token
+    # TODO: write a generator
+
 
     def update_params(self, dec_enc_new_dparams):
         """Updates params of both decoder and encoder according to deltas given"""
@@ -89,13 +76,7 @@ class LSTMEncDec:
         
         n_dparams = len(all_dparams[0])
         dparams_avg = [sum(all_dparams[j][i] for j in xrange(batch_size))/float(batch_size) for i in xrange(n_dparams)]
-        
 
-        # print 'shape avant', type(all_dparams[0][0]), all_dparams[0].shape
-        # dparams = [np.average(dp, axis=0) for dparams in all_dparams \
-        #            for dparam in dparams]
-        # print 'shape apres', dparams.shape
-        
         # Regularization
         e_reg_updates, e_reg_cost = self.encoder.reg_updates_cost()
         d_reg_updates, d_reg_cost = self.decoder.reg_updates_cost()
@@ -107,15 +88,11 @@ class LSTMEncDec:
         
         return final_cost
 
-
-    # actual def f_prop will worry about end-tokens
-
-# TODO: code up
 if __name__ == '__main__':
     lstm = LSTMEncDec(12,12,12,12)
 
     print 'processing batch'
-    cost = lstm.process_batch([[1,2,3]],[[2,2,2]])
-    # cost = lstm.process_batch([[1,2,3],[2,2,2]], [[3,2],[0,0]])
+    #cost = lstm.process_batch([[1,2,3]],[[2,2,2]])
+    cost = lstm.process_batch([[1,2,3],[2,2,2]], [[3,2],[0,0]])
     print cost
     print 'all done'
