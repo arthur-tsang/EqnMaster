@@ -5,6 +5,10 @@ from theano.tensor.nnet import sigmoid, softmax
 
 from misc import random_weight_matrix
 
+# For debugging:
+from theano import config
+config.exception_verbosity = 'high'
+
 rng = np.random
 
 
@@ -65,6 +69,7 @@ class LSTMDec:
 
         self.f_prop_function = self.compile_f_prop() 
         self.b_prop_function = self.compile_b_prop()
+        print 'done compiling functions'
 
 
     def reset_grads(self):
@@ -108,7 +113,7 @@ class LSTMDec:
         return new_cost, ch_t
 
     def symbolic_f_prop(self, ys, ch_prev):
-        """returns symbolic variable based on (cost, ch_prev) and ys."""
+        """returns symbolic variable based on ys and ch_prev."""
 
         results, updates = scan(fn = self.lstm_timestep, 
                                 outputs_info = [np.float64(0.0), ch_prev],
@@ -145,12 +150,13 @@ class LSTMDec:
         ys = T.ivector('ys')
         cost_final = self.symbolic_f_prop(ys, ch_prev)
 
-        print 'cost final', pp(cost_final), cost_final.type
+        # print 'cost final', pp(cost_final), cost_final.type
 
-        return function([], self.symbolic_b_prop(cost_final))
+        print 'working on compiling backprop'
+        return function([ys, ch_prev], self.symbolic_b_prop(cost_final))
 
-    def b_prop(self, cost_final):
-        new_dparams = self.b_prop_function(cost_final)
+    def b_prop(self, ys, ch_prev):
+        new_dparams = self.b_prop_function(ys, ch_prev)
         for dparam, new_dparam in zip(self.dparams, new_dparams):
             dparam.set_value(new_dparam + dparam.get_value())
 
@@ -174,7 +180,10 @@ if __name__ == '__main__':
     cost_final = ld.f_prop(ys, ch_prev)
     print cost_final
     
-    #ld.b_prop(cost_final)
+    ld.b_prop(ys, ch_prev)
+    print 'printing dparams'
+    for dparam in ld.dparams:
+        print dparam.get_value()
 
     #self.b_prop_function
 
