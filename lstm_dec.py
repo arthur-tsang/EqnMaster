@@ -47,29 +47,30 @@ class LSTMDec:
         self.U  = shared(random_weight_matrix(outdim, hdim), name='U')
         self.b  = shared(np.zeros(outdim), name='b')
 
-        # self.dL = shared(np.zeros(wdim, vdim), name='dL')
-        # W: times character-vector, U: times previous-hidden-vector
-        # i: input, f: forget, o: output, c: new-cell
-        # self.dWi = shared(np.zeros(hdim, wdim), name='dWi')
-        self.dUi = shared(np.zeros((hdim, hdim)), name='dUi')
-        # self.dWf = shared(np.zeros(hdim, wdim), name='dWf')
-        self.dUf = shared(np.zeros((hdim, hdim)), name='dUf')
-        # self.dWo = shared(np.zeros(hdim, wdim), name='dWo')
-        self.dUo = shared(np.zeros((hdim, hdim)), name='dUo')
-        # self.dWc = shared(np.zeros(hdim, wdim), name='dWc')
-        self.dUc = shared(np.zeros((hdim, hdim)), name='dUc')
-        self.dU  = shared(np.zeros((hdim, hdim)), name='dU')
-        self.db  = shared(np.zeros(outdim), name='db')
+        # # self.dL = shared(np.zeros(wdim, vdim), name='dL')
+        # # W: times character-vector, U: times previous-hidden-vector
+        # # i: input, f: forget, o: output, c: new-cell
+        # # self.dWi = shared(np.zeros(hdim, wdim), name='dWi')
+        # self.dUi = shared(np.zeros((hdim, hdim)), name='dUi')
+        # # self.dWf = shared(np.zeros(hdim, wdim), name='dWf')
+        # self.dUf = shared(np.zeros((hdim, hdim)), name='dUf')
+        # # self.dWo = shared(np.zeros(hdim, wdim), name='dWo')
+        # self.dUo = shared(np.zeros((hdim, hdim)), name='dUo')
+        # # self.dWc = shared(np.zeros(hdim, wdim), name='dWc')
+        # self.dUc = shared(np.zeros((hdim, hdim)), name='dUc')
+        # self.dU  = shared(np.zeros((hdim, hdim)), name='dU')
+        # self.db  = shared(np.zeros(outdim), name='db')
 
         self.params = [self.Ui, self.Uf, self.Uo, self.Uc, self.U, self.b]
 
-        # self.params = [self.L, self.Wi, self.Ui, self.Wf, self.Uf, self.Wo, self.Uo, self.Wc, self.Uc, self.U, self.db]
-        self.dparams = [self.dUi, self.dUf, self.dUo, self.dUc, self.dU, self.db]
-        # self.dparams = [self.dL, self.dWi, self.dUi, self.dWf, self.dUf, self.dWo, self.dUo, self.dWc, self.dUc, self.dU, self.db]
+        # # self.params = [self.L, self.Wi, self.Ui, self.Wf, self.Uf, self.Wo, self.Uo, self.Wc, self.Uc, self.U, self.db]
+        # self.dparams = [self.dUi, self.dUf, self.dUo, self.dUc, self.dU, self.db]
+        # # self.dparams = [self.dL, self.dWi, self.dUi, self.dWf, self.dUf, self.dWo, self.dUo, self.dWc, self.dUc, self.dU, self.db]
 
-        self.f_prop_function = self.compile_f_prop() 
-        self.b_prop_function = self.compile_b_prop()
-        print 'done compiling functions'
+        # # compile functions!
+        # self.f_prop_function = self.compile_f_prop() 
+        # self.b_prop_function = self.compile_b_prop()
+        # print 'done compiling functions'
 
 
     def reset_grads(self):
@@ -123,18 +124,18 @@ class LSTMDec:
         return results[0][-1]
 
 
-    def compile_f_prop(self):
-        """one-time create f_prop function"""
-        ch_prev = T.vector('ch_prev') # through dimensions at one time
-        ys = T.ivector('ys') # through time
+    # def compile_f_prop(self):
+    #     """one-time create f_prop function"""
+    #     ch_prev = T.vector('ch_prev') # through dimensions at one time
+    #     ys = T.ivector('ys') # through time
 
-        return function([ys, ch_prev], self.symbolic_f_prop(ys, ch_prev))
+    #     return function([ys, ch_prev], self.symbolic_f_prop(ys, ch_prev))
 
 
         
-    def f_prop(self, ys, ch_prev):
-        final_cost = self.f_prop_function(ys, ch_prev)
-        return final_cost
+    # def f_prop(self, ys, ch_prev):
+    #     final_cost = self.f_prop_function(ys, ch_prev)
+    #     return final_cost
 
 
     def symbolic_b_prop(self, cost_final):
@@ -144,23 +145,23 @@ class LSTMDec:
 
         return new_dparams
         
-    def compile_b_prop(self):
-        # cost_final is symbolic (output of symbolic_f_prop)
-        # TODO: would the function be faster if it took in hs?
-        # TODO: also, make sure this doesn't take too long (on order 10s right now for me)
-        ch_prev = T.vector('ch_prev')
-        ys = T.ivector('ys')
-        cost_final = self.symbolic_f_prop(ys, ch_prev)
+    # def compile_b_prop(self):
+    #     # cost_final is symbolic (output of symbolic_f_prop)
+    #     # TODO: would the function be faster if it took in hs?
+    #     # TODO: also, make sure this doesn't take too long (on order 10s right now for me)
+    #     ch_prev = T.vector('ch_prev')
+    #     ys = T.ivector('ys')
+    #     cost_final = self.symbolic_f_prop(ys, ch_prev)
 
-        # print 'cost final', pp(cost_final), cost_final.type
+    #     # print 'cost final', pp(cost_final), cost_final.type
 
-        print 'working on compiling backprop'
-        return function([ys, ch_prev], self.symbolic_b_prop(cost_final))
+    #     print 'working on compiling backprop'
+    #     return function([ys, ch_prev], self.symbolic_b_prop(cost_final))
 
-    def b_prop(self, ys, ch_prev):
-        new_dparams = self.b_prop_function(ys, ch_prev)
-        for dparam, new_dparam in zip(self.dparams, new_dparams):
-            dparam.set_value(new_dparam + dparam.get_value())
+    # def b_prop(self, ys, ch_prev):
+    #     new_dparams = self.b_prop_function(ys, ch_prev)
+    #     for dparam, new_dparam in zip(self.dparams, new_dparams):
+    #         dparam.set_value(new_dparam + dparam.get_value())
 
 
     # # new approach

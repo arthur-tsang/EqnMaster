@@ -42,23 +42,23 @@ class LSTMEnc:
         self.Wc = shared(random_weight_matrix(hdim, wdim), name='Wc')
         self.Uc = shared(random_weight_matrix(hdim, hdim), name='Uc')
 
-        self.dL = shared(np.zeros((wdim, vdim)), name='dL')
-        # W: times character-vector, U: times previous-hidden-vector
-        # i: input, f: forget, o: output, c: new-cell
-        self.dWi = shared(np.zeros((hdim, wdim)), name='dWi')
-        self.dUi = shared(np.zeros((hdim, hdim)), name='dUi')
-        self.dWf = shared(np.zeros((hdim, wdim)), name='dWf')
-        self.dUf = shared(np.zeros((hdim, hdim)), name='dUf')
-        self.dWo = shared(np.zeros((hdim, wdim)), name='dWo')
-        self.dUo = shared(np.zeros((hdim, hdim)), name='dUo')
-        self.dWc = shared(np.zeros((hdim, wdim)), name='dWc')
-        self.dUc = shared(np.zeros((hdim, hdim)), name='dUc')
+        # self.dL = shared(np.zeros((wdim, vdim)), name='dL')
+        # # W: times character-vector, U: times previous-hidden-vector
+        # # i: input, f: forget, o: output, c: new-cell
+        # self.dWi = shared(np.zeros((hdim, wdim)), name='dWi')
+        # self.dUi = shared(np.zeros((hdim, hdim)), name='dUi')
+        # self.dWf = shared(np.zeros((hdim, wdim)), name='dWf')
+        # self.dUf = shared(np.zeros((hdim, hdim)), name='dUf')
+        # self.dWo = shared(np.zeros((hdim, wdim)), name='dWo')
+        # self.dUo = shared(np.zeros((hdim, hdim)), name='dUo')
+        # self.dWc = shared(np.zeros((hdim, wdim)), name='dWc')
+        # self.dUc = shared(np.zeros((hdim, hdim)), name='dUc')
 
         self.params = [self.L, self.Wi, self.Ui, self.Wf, self.Uf, self.Wo, self.Uo, self.Wc, self.Uc]
-        self.dparams = [self.dL, self.dWi, self.dUi, self.dWf, self.dUf, self.dWo, self.dUo, self.dWc, self.dUc]
+        #self.dparams = [self.dL, self.dWi, self.dUi, self.dWf, self.dUf, self.dWo, self.dUo, self.dWc, self.dUc]
 
-        self.f_prop_function = self.compile_f_prop() 
-        self.b_prop_function = self.compile_b_prop()
+        # self.f_prop_function = self.compile_f_prop() 
+        # self.b_prop_function = self.compile_b_prop()
 
     def reset_grads(self):
         """Resets all grads to zero (maintaining shape!)"""
@@ -99,15 +99,42 @@ class LSTMEnc:
         return results[-1]
 
 
-    def compile_f_prop(self):
-        """one-time create f_prop function"""
-        ch_prev = T.vector('ch_prev') # through dimensions at one time
-        xs = T.ivector('xs') # through time
+    # def compile_f_prop(self):
+    #     """one-time create f_prop function"""
+    #     ch_prev = T.vector('ch_prev') # through dimensions at one time
+    #     xs = T.ivector('xs') # through time
 
-        return function([xs, ch_prev], self.symbolic_f_prop(xs, ch_prev))
+    #     return function([xs, ch_prev], self.symbolic_f_prop(xs, ch_prev))
         
-    def f_prop(self, xs):
-        return self.f_prop_function(xs,np.zeros(2*self.hdim))
+    # def f_prop(self, xs):
+    #     return self.f_prop_function(xs,np.zeros(2*self.hdim))
+
+    def symbolic_b_prop(self, cost_final):
+        new_dparams = []
+        for param in self.params:
+            new_dparams.append(T.grad(cost_final, param))
+
+        return new_dparams
+        
+    # def compile_b_prop(self):
+    #     # cost_final is symbolic (output of symbolic_f_prop)
+    #     # TODO: would the function be faster if it took in hs?
+    #     # TODO: also, make sure this doesn't take too long (on order 10s right now for me)
+    #     ch_prev = T.vector('ch_prev')
+    #     ys = T.ivector('ys')
+    #     cost_final = self.symbolic_f_prop(ys, ch_prev)
+
+    #     # print 'cost final', pp(cost_final), cost_final.type
+
+    #     print 'working on compiling backprop'
+    #     return function([ys, ch_prev], self.symbolic_b_prop(cost_final))
+
+    # def b_prop(self, ys, ch_prev):
+    #     new_dparams = self.b_prop_function(ys, ch_prev)
+    #     for dparam, new_dparam in zip(self.dparams, new_dparams):
+    #         dparam.set_value(new_dparam + dparam.get_value())
+
+
 
     # def symbolic_b_prop(self, xs, ch_prev):
     #     cost_final = self.symbolic_f_prop(xs, ch_prev)
