@@ -90,6 +90,12 @@ class LSTMEnc:
 
         return ch_t
 
+    def reg_updates_cost(self):
+        param_values = [param.get_value() for param in self.params]
+        updates = [self.rho * param for param in param_values]
+        reg_cost = 0.5 * self.rho * (np.sum(np.sum(param**2) for param in param_values))
+        return (updates, reg_cost)
+
     def symbolic_f_prop(self, xs, ch_prev):
         """returns symbolic variable based on ch_prev and xs."""
 

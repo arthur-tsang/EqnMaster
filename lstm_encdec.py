@@ -31,7 +31,7 @@ class LSTMEncDec:
         print 'done compiling'
 
     def symbolic_f_prop(self, xs, ys):
-        hidden_inter = self.encoder.symbolic_f_prop(xs, np.zeros(2*self.hdim)) #note: are we allowed to put np.zeros here? (ipython makes me think so)
+        hidden_inter = self.encoder.symbolic_f_prop(xs, np.zeros(2*self.hdim))
         cost = self.decoder.symbolic_f_prop(ys, hidden_inter)
         return cost
 
@@ -95,11 +95,17 @@ class LSTMEncDec:
         # dparams = [np.average(dp, axis=0) for dparams in all_dparams \
         #            for dparam in dparams]
         # print 'shape apres', dparams.shape
-        self.update_params(dparams)
+        
+        # Regularization
+        e_reg_updates, e_reg_cost = self.encoder.reg_updates_cost()
+        d_reg_updates, d_reg_cost = self.decoder.reg_updates_cost()
 
-        # forget about regularizing for now
-
-        return 1. * tot_cost / batch_size
+        self.update_params(dparams_avg)
+        self.update_params(d_reg_updates + e_reg_updates)
+        
+        final_cost = float(tot_cost) / batch_size + e_reg_cost + d_reg_cost
+        
+        return final_cost
 
 
     # actual def f_prop will worry about end-tokens
