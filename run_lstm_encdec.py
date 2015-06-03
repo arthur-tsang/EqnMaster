@@ -22,22 +22,25 @@ if __name__ == '__main__':
     outdim = len(outvocab)
     vdim = len(invocab)
     batch_size = 5
-    n_epochs = 5000
+    n_epochs = 100#5000
 
-    X_train = X_train[:100]
-    Y_train = Y_train[:100]
+    # X_train = X_train[:100]
+    # Y_train = Y_train[:100]
+
+    # X_train = X_train[:20]
+    # Y_train = Y_train[:20]
 
     # X_train = [[4,5,1,10,11,10,8,2,6]]
     # Y_train = [[1,2,7,7]]
 
 
-    # X_train = X_train[:1000]
-    # Y_train = Y_train[:1000]
+    X_train = X_train[:1000]
+    Y_train = Y_train[:1000]
     
     ## EncDec model train
     led = LSTMEncDec(vdim, hdim, wdim, outdim, alpha=0.01, rho = 0.0000)
 
-    led.load_model(model_filename) # if retraining
+    #led.load_model(model_filename) # if retraining
     led.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True)
     led.save_model(model_filename)
 

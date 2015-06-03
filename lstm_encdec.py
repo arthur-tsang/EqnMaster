@@ -80,8 +80,11 @@ class LSTMEncDec:
 
     def update_params(self, dec_enc_new_dparams):
         """Updates params of both decoder and encoder according to deltas given"""
+        #print 'entry', dec_enc_new_dparams
         for param, dparam in zip(self.decoder.params + self.encoder.params, dec_enc_new_dparams):
+            #print 'before', param.get_value()
             param.set_value(param.get_value() - self.alpha * dparam)
+            #print 'after', param.get_value()
 
     def process_batch(self, all_xs, all_ys, shouldUpdate = True):
         """Don't worry about end token to use this function!
@@ -103,13 +106,15 @@ class LSTMEncDec:
         n_dparams = len(all_dparams[0])
         dparams_avg = [sum(all_dparams[j][i] for j in xrange(batch_size))/float(batch_size) for i in xrange(n_dparams)]
 
+        # print 'dparams_avg', dparams_avg
+
         # Regularization
         e_reg_updates, e_reg_cost = self.encoder.reg_updates_cost()
         d_reg_updates, d_reg_cost = self.decoder.reg_updates_cost()
 
         if shouldUpdate:
             self.update_params(dparams_avg)
-            self.update_params(d_reg_updates + e_reg_updates)
+            self.update_params(d_reg_updates + e_reg_updates) # TODO: uncomment
         
         final_cost = float(tot_cost) / batch_size + e_reg_cost + d_reg_cost
         
