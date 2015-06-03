@@ -168,7 +168,7 @@ def generate_mult_examples():
 
 def generate_subtr_examples():
     """Three-digit subtraction, no spaces"""
-    n_train = 5000
+    n_train = 10000
     n_dev = 1000
     n_test = 1000
 
@@ -223,7 +223,7 @@ if __name__ == '__main__':
     # generate_examples()
     # generate_discr_examples()
     # generate_easy_examples()
-    generate_mult_examples()
-    # generate_subtr_examples()
+    # generate_mult_examples()
+    generate_subtr_examples()
     
     
