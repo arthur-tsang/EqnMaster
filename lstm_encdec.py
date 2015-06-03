@@ -165,8 +165,11 @@ class LSTMEncDec:
         # Load encoder/decoder from a file (Note that we assume that we remember
         # start/end tokens are at the end of vocabs)
         with open(file_name, 'rb') as f:
-            self.encoder, self.decoder = pickle.load(f)
-
+            enc, dec = pickle.load(f)
+            for self_param, saved_param in zip(self.encoder.params, enc.params):
+                self_param.set_value(saved_param.get_value())
+            for self_param, saved_param in zip(self.decoder.params, dec.params):
+                self_param.set_value(saved_param.get_value())
 
 
 if __name__ == '__main__':

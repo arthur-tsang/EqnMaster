@@ -22,7 +22,7 @@ if __name__ == '__main__':
     outdim = len(outvocab)
     vdim = len(invocab)
     batch_size = 5
-    n_epochs = 20
+    n_epochs = 100
 
     # TODO: comment out the next two lines
     X_train = X_train[:10]
@@ -31,9 +31,9 @@ if __name__ == '__main__':
     ## EncDec model train
     led = LSTMEncDec(vdim, hdim, wdim, outdim, alpha=0.01, rho = 0.0000)
 
-    #led.load_model(model_filename) # if retraining
+    led.load_model(model_filename) # if retraining
     led.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True, filename=model_filename)
-    led.save_model(model_filename)
+    #led.save_model(model_filename)
 
     # ## LSTMEncDec model test
     # toy_problems = [decode(x, invocab) for x in X_train]
