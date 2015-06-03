@@ -25,6 +25,13 @@ def mult_example():
     y = str(first * second)
     return (x,y)
 
+def subtr_example():
+    first = np.random.randint(1000)
+    second = np.random.randint(1000)
+    x = str(first) + '-' + str(second)
+    y = str(first + second)
+    return (x,y)
+
 
 def simple_discr_example():
     # Come up with an (x,y) pair that doesn't match
@@ -120,10 +127,10 @@ def generate_easy_examples():
     print 'Generated positive examples of sizes', len(train_dat), len(dev_dat), len(test_dat)
 
 def generate_mult_examples():
-    """Two-digit addition, no spaces"""
-    n_train = 500
-    n_dev = 100
-    n_test = 100
+    """Two-digit multiplication, no spaces"""
+    n_train = 10000
+    n_dev = 2000
+    n_test = 2000
 
     train_file = 'data/mult_train.p'
     dev_file = 'data/mult_dev.p'
@@ -147,10 +154,36 @@ def generate_mult_examples():
     print 'Generated positive examples of sizes', len(train_dat), len(dev_dat), len(test_dat)
 
 
-    
+def generate_subtr_examples():
+    """Three-digit subtraction, no spaces"""
+    n_train = 5000
+    n_dev = 1000
+    n_test = 1000
+
+    train_file = 'data/subtr_train.p'
+    dev_file = 'data/subtr_dev.p'
+    test_file = 'data/subtr_test.p'
+
+    train_dat = [subtr_example() for _ in xrange(n_train)]
+
+    dev_dat_raw = [subtr_example() for _ in xrange(n_dev)]
+    dev_dat = [x for x in dev_dat_raw if x not in train_dat]
+
+    test_dat_raw = [subtr_example() for _ in xrange(n_test)]
+    test_dat = [x for x in test_dat_raw if x not in train_dat and x not in dev_dat]
+
+    with open(train_file, 'w') as f:
+        pickle.dump(train_dat, f)
+    with open(dev_file, 'w') as f:
+        pickle.dump(dev_dat, f)
+    with open(test_file, 'w') as f:
+        pickle.dump(test_dat, f)
+
+    print 'Generated positive examples of sizes', len(train_dat), len(dev_dat), len(test_dat)    
 
 if __name__ == '__main__':
     # generate_examples()
     # generate_discr_examples()
     # generate_easy_examples()
-    generate_mult_examples()
+    # generate_mult_examples()
+    # generate_subtr_examples()
