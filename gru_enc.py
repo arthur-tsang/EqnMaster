@@ -48,8 +48,6 @@ class GRUEnc:
             dparam.set_value(0 * dparam.get_value())
 
     def gru_timestep(self, x_t, h_prev):
-        """calculates info to pass to next time step.
-        x_t is a scalar; ch_prev is a vector of size 2*hdim"""
 
         Lx_t = self.L[:,x_t]
         # gates (update, reset)

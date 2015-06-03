@@ -39,7 +39,7 @@ class GRUEncDec:
         print 'done compiling'
 
     def symbolic_f_prop(self, xs, ys):
-        hidden_inter = self.encoder.symbolic_f_prop(xs, np.zeros(2*self.hdim))
+        hidden_inter = self.encoder.symbolic_f_prop(xs, np.zeros(self.hdim))
         cost = self.decoder.symbolic_f_prop(ys, hidden_inter)
         return cost
 
@@ -65,7 +65,7 @@ class GRUEncDec:
         
 
     def symbolic_generate(self, xs):
-        ch = self.encoder.symbolic_f_prop(xs, np.zeros(2*self.hdim))
+        ch = self.encoder.symbolic_f_prop(xs, np.zeros(self.hdim))
         ys = self.decoder.symbolic_generate(ch)
         return ys
 
