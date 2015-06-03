@@ -120,7 +120,7 @@ class LSTMEncDec:
         
         return final_cost
 
-    def sgd(self, batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True):
+    def sgd(self, batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True, filename='models/tmp.p'):
         """Implentation of minibatch SGD over all training data (copied from enc_dec)"""
 
         print 'Training:'
@@ -149,6 +149,7 @@ class LSTMEncDec:
 
             # Print progress
             if verbose and (epoch % 10) == 0:
+                self.save_model(filename)
                 print "Epoch", epoch
                 print "Training Cost (estimate):", self.process_batch(X_train[:50], Y_train[:50], shouldUpdate = False)
                 if X_dev is not None:

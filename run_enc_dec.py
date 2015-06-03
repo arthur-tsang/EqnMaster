@@ -36,7 +36,7 @@ if __name__ == '__main__':
     ed = EncDec(vdim, hdim, wdim, outdim, alpha=0.001, rho = 0.0000)
     #ed.grad_check(X_train[:10], Y_train[:10])
     ed.load_model(model_filename) # if retraining
-    ed.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True)
+    ed.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True, filename=model_filename)
     # ed.save_model(model_filename)
 
     ## EncDec model test

@@ -10,7 +10,7 @@ from run_helpers import decode, model_solve, preprocess_data, outvocab, invocab
 if __name__ == '__main__':
 
     ## Filename to save LSTMEncDec
-    model_filename = 'models/gru_test.p'
+    model_filename = 'models/gru_test2.p'
 
     ## Data
     X_train, Y_train = preprocess_data('data/3dig_train.p', asNumpy = False)
@@ -40,8 +40,8 @@ if __name__ == '__main__':
     ## EncDec model train
     gru = GRUEncDec(vdim, hdim, wdim, outdim, alpha=0.01, rho = 0.0000)
 
-    gru.load_model(model_filename) # if retraining
-    gru.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True)
+    #gru.load_model(model_filename) # if retraining
+    gru.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True, filename=model_filename)
     gru.save_model(model_filename)
 
     # ## LSTMEncDec model test

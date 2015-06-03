@@ -41,7 +41,7 @@ if __name__ == '__main__':
     led = LSTMEncDec(vdim, hdim, wdim, outdim, alpha=0.01, rho = 0.0000)
 
     #led.load_model(model_filename) # if retraining
-    led.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True)
+    led.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True, filename=model_filename)
     led.save_model(model_filename)
 
     # ## LSTMEncDec model test
