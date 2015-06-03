@@ -5,7 +5,7 @@ import numpy as np
 from lstm_encdec import LSTMEncDec
 #from visualize_vecs import svd_visualize, tsne_visualize, pca_visualize
 
-from run_helpers import decode, model_solve, preprocess_data, outvocab, invocab
+from run_helpers2 import decode, model_solve, preprocess_data, outvocab, invocab
 
 if __name__ == '__main__':
 
@@ -13,16 +13,16 @@ if __name__ == '__main__':
     model_filename = 'models/led_100.p'
 
     ## Data
-    X_train, Y_train = preprocess_data('data/3dig_train.p', asNumpy = False)
-    X_dev, Y_dev = preprocess_data('data/3dig_dev.p', asNumpy=False)
+    X_train, Y_train = preprocess_data('data/subtr_train.p', asNumpy = False)
+    X_dev, Y_dev = preprocess_data('data/subtr_dev.p', asNumpy=False)
 
     ## Hyperparameters
-    hdim = 50
-    wdim = 50
+    hdim = 40
+    wdim = 40
     outdim = len(outvocab)
     vdim = len(invocab)
     batch_size = 5
-    n_epochs = 5000
+    n_epochs = 500
 
     # X_train = X_train[:100]
     # Y_train = Y_train[:100]
