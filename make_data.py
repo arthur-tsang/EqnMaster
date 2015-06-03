@@ -29,7 +29,7 @@ def subtr_example():
     first = np.random.randint(1000)
     second = np.random.randint(1000)
     x = str(first) + '-' + str(second)
-    y = str(first + second)
+    y = str(first - second)
     return (x,y)
 
 
@@ -186,4 +186,4 @@ if __name__ == '__main__':
     # generate_discr_examples()
     # generate_easy_examples()
     # generate_mult_examples()
-    # generate_subtr_examples()
+    generate_subtr_examples()
