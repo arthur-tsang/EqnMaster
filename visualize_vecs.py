@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import decomposition
@@ -86,11 +85,3 @@ def pca_visualize(L, labels, outfile = 'figs/pca.jpg'):
         if outfile is not None:
                 fig.savefig(outfile)
         plt.show()
-
-
-
-if __name__ == '__main__':
-        L = np.array([[1,2,3],[4,5,6],[7,8,9],[1,1,1]])
-        svd_visualize(L)
-        
-        # that's it!

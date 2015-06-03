@@ -1,10 +1,17 @@
 import numpy as np
+import pickle
 
 import theano.tensor as T
 from theano import function
 
 from lstm_enc import LSTMEnc
 from lstm_dec import LSTMDec
+
+# # For debugging:
+from theano import config
+config.floatX = 'float32'
+# config.optimizer = 'fast_compile'
+# #config.exception_verbosity = 'high'
 
 
 class LSTMEncDec:
@@ -50,7 +57,7 @@ class LSTMEncDec:
         cost = self.symbolic_f_prop(xs, ys)
         new_dparams = self.symbolic_b_prop(cost)
 
-        return function([xs, ys], [cost] + new_dparams)
+        return function([xs, ys], [cost] + new_dparams, allow_input_downcast=True)
 
     def both_prop(self, xs, ys):
         """Like f_prop, but also returns updates for bprop"""
@@ -120,7 +127,7 @@ class LSTMEncDec:
 
         # Actual code
         N = len(X_train)
-        iterations_per_epoch = N / batch_size # using SGD
+        iterations_per_epoch = 1+ N / batch_size # using SGD
 
         # 1 epoch is 1 pass over training data
         for epoch in xrange(n_epochs):
@@ -141,6 +148,20 @@ class LSTMEncDec:
                 print "Training Cost (estimate):", self.process_batch(X_train[:50], Y_train[:50], shouldUpdate = False)
                 if X_dev is not None:
                     print "Dev Cost:", self.process_batch(X_dev, Y_dev, shouldUpdate = False)
+
+    def save_model(self, file_name):
+        # Save encoder/decoder to a file (Note that we assume that we remember
+        # start/end tokens are at the end of vocabs)
+        with open(file_name, 'wb') as f:
+            pickle.dump((self.encoder, self.decoder), f)
+
+    def load_model(self, file_name):
+        # Load encoder/decoder from a file (Note that we assume that we remember
+        # start/end tokens are at the end of vocabs)
+        with open(file_name, 'rb') as f:
+            self.encoder, self.decoder = pickle.load(f)
+
+
 
 if __name__ == '__main__':
     lstm = LSTMEncDec(12,12,12,12)

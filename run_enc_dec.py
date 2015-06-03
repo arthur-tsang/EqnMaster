@@ -3,49 +3,29 @@
 import numpy as np
 
 from enc_dec import EncDec
-from misc import get_data
-from visualize_vecs import svd_visualize, tsne_visualize, multi_tsne, pca_visualize
+#from misc import get_data
+from visualize_vecs import svd_visualize, tsne_visualize, pca_visualize
 
-# Keep track of vocab as a string of certain characters
-outvocab = '0123456789'
-invocab = outvocab + ' +'
-outdim = len(outvocab)
-vdim = len(invocab)
-# Dictionary to look up index by character
-outdico = {c:i for i,c in enumerate(outvocab)}
-indico = {c:i for i,c in enumerate(invocab)}
-
-
-def encode(nr_string, dico):
-    return np.array([dico[c] for c in nr_string])
-
-def decode(labels, vocab):
-    return ''.join(vocab[label] for label in labels if label<len(vocab))
-
-def labelize(xy_data):
-    # Go from tuples of strings to X and Y as lists of int labels
-    X = [encode(x, indico) for x,y in xy_data]
-    Y = [encode(y, outdico) for x,y in xy_data]
-
-    return (X,Y)
+from run_helpers import decode, model_solve, preprocess_data, outvocab, invocab
 
 def ed_solve(ed, in_string):
-    return decode(ed.generate_answer(encode(in_string, indico)), outvocab)
+    # TODO: this function is redundant... change eval's call(s) to it
+    return model_solve(ed, in_string)
 
 if __name__ == '__main__':
+
     ## Filename to save ED
     model_filename = 'models/ed_full.p'
 
     ## Data
-    train_data = get_data('data/3dig_train.p')
-    dev_data = get_data('data/3dig_dev.p')
-
-    X_train, Y_train = labelize(train_data)
-    X_dev, Y_dev = labelize(dev_data)
+    X_train, Y_train = preprocess_data('data/3dig_train.p')
+    X_dev, Y_dev = preprocess_data('data/3dig_dev.p')
 
     ## Hyperparameters
     hdim = 50
     wdim = 50
+    outdim = len(outvocab)
+    vdim = len(invocab)
     batch_size = 1000
     n_epochs = 5000
 
@@ -57,10 +37,10 @@ if __name__ == '__main__':
     #ed.grad_check(X_train[:10], Y_train[:10])
     ed.load_model(model_filename) # if retraining
     ed.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True)
-    ed.save_model(model_filename)
+    # ed.save_model(model_filename)
 
     ## EncDec model test
-    toy_problems = [decode(x, invocab) for x in X_train]
+    # toy_problems = [decode(x, invocab) for x in X_train]
     # toy_problems = ['5+15','17+98','7+7','3+7']
     
     L = ed.encoder.params['L']
