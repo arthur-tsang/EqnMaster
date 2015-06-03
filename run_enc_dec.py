@@ -4,7 +4,7 @@ import numpy as np
 
 from enc_dec import EncDec
 #from misc import get_data
-from visualize_vecs import svd_visualize, tsne_visualize, pca_visualize
+#from visualize_vecs import svd_visualize, tsne_visualize, pca_visualize
 
 from run_helpers import decode, model_solve, preprocess_data, outvocab, invocab
 
