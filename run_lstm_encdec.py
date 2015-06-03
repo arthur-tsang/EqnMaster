@@ -3,7 +3,7 @@
 import numpy as np
 
 from lstm_encdec import LSTMEncDec
-from visualize_vecs import svd_visualize, tsne_visualize, pca_visualize
+#from visualize_vecs import svd_visualize, tsne_visualize, pca_visualize
 
 from run_helpers import decode, model_solve, preprocess_data, outvocab, invocab
 
