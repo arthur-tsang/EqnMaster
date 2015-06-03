@@ -22,7 +22,7 @@ if __name__ == '__main__':
     outdim = len(outvocab)
     vdim = len(invocab)
     batch_size = 5
-    n_epochs = 100#5000
+    n_epochs = 5000
 
     # X_train = X_train[:100]
     # Y_train = Y_train[:100]

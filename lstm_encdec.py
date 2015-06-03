@@ -114,7 +114,7 @@ class LSTMEncDec:
 
         if shouldUpdate:
             self.update_params(dparams_avg)
-            self.update_params(d_reg_updates + e_reg_updates) # TODO: uncomment
+            self.update_params(d_reg_updates + e_reg_updates)
         
         final_cost = float(tot_cost) / batch_size + e_reg_cost + d_reg_cost
         
