@@ -1,17 +1,20 @@
 import numpy as np
 import pickle
+import os.path
 
 import theano.tensor as T
 from theano import function
+from theano.compile.function import function_dump
 
+from misc import try_load
 from gru_enc import GRUEnc
 from gru_dec import GRUDec
 
 # # For debugging:
 from theano import config
-config.floatX = 'float32'
-config.optimizer = 'fast_compile'
-config.exception_verbosity = 'high'
+#config.floatX = 'float32'
+# config.optimizer = 'fast_compile'
+# config.exception_verbosity = 'high'
 
 
 class GRUEncDec:
@@ -34,8 +37,8 @@ class GRUEncDec:
         
         # compiled functions
         print 'about to compile'
-        self.both_prop_compiled = self.compile_both()
-        self.generate_function = self.compile_generate()
+        self.both_prop_compiled = try_load('functions/gru_prop_cpu.p', self.compile_both)
+        self.generate_function = try_load('functions/gru_gen.p', self.compile_generate)
         print 'done compiling'
 
     def symbolic_f_prop(self, xs, ys):
@@ -49,15 +52,18 @@ class GRUEncDec:
 
         return dec_new_dparams + enc_new_dparams # python-list concatenation
 
-    def compile_both(self):
+    def compile_both(self, filename):
         """Compiles a function that computes both cost and deltas at the same time"""
+
         xs = T.ivector('xs')
         ys = T.ivector('ys')
-        
+            
         cost = self.symbolic_f_prop(xs, ys)
         new_dparams = self.symbolic_b_prop(cost)
 
-        return function([xs, ys], [cost] + new_dparams, allow_input_downcast=True)
+        function_dump(filename, [xs, ys], [cost] + new_dparams, allow_input_downcast=True)
+        # return function(...)
+            
 
     def both_prop(self, xs, ys):
         """Like f_prop, but also returns updates for bprop"""
@@ -69,10 +75,10 @@ class GRUEncDec:
         ys = self.decoder.symbolic_generate(ch)
         return ys
 
-    def compile_generate(self):
+    def compile_generate(self, filename):
         xs = T.ivector('xs')
-        f = function([xs], self.symbolic_generate(xs))
-        return f
+        function_dump(filename, [xs], self.symbolic_generate(xs), allow_input_downcast=True)
+        # return function(...)
 
     def generate_answer(self, xs):
         return self.generate_function(xs)
@@ -121,7 +127,7 @@ class GRUEncDec:
         return final_cost
 
     def sgd(self, batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True, filename='models/tmp.p'):
-        """Implentation of minibatch SGD over all training data (copied from enc_dec)"""
+        """Implentation of minibatch SGD over all training data (copied from enc_dec). End-tokens will be automatically added later"""
 
         print 'Training:'
         print 'Train Set Size:', len(Y_train)
@@ -175,13 +181,22 @@ class GRUEncDec:
 
 
 if __name__ == '__main__':
-    lstm = LSTMEncDec(12,12,12,12)
+    gru = GRUEncDec(12, 12, 12, 12)
+    
+    X_train = [[1,2,3], [4,5]]
+    Y_train = [[7,7,7], [2,3]]
+    gru.sgd(5, 200, X_train, Y_train)
 
-    print 'processing batch'
-    cost1 = lstm.process_batch([[3,2]],[[0,0]])
-    cost2 = lstm.process_batch([[1,2,3]],[[2,2,2]])
-    cost3 = lstm.process_batch([[1,2,3],[2,2,2]], [[3,2],[0,0]])
-    print cost1, cost2, cost3
-    print lstm.generate_answer([1,2,3])
-    lstm.sgd(2, 2, [[1,2,3], [4,5], [3,4]], [[3,3], [2], [1]])
-    print 'all done'
+    answer = gru.generate_answer([1,2,3])
+    print 'answer:', answer
+    
+    # lstm = LSTMEncDec(12,12,12,12)
+
+    # print 'processing batch'
+    # cost1 = lstm.process_batch([[3,2]],[[0,0]])
+    # cost2 = lstm.process_batch([[1,2,3]],[[2,2,2]])
+    # cost3 = lstm.process_batch([[1,2,3],[2,2,2]], [[3,2],[0,0]])
+    # print cost1, cost2, cost3
+    # print lstm.generate_answer([1,2,3])
+    # lstm.sgd(2, 2, [[1,2,3], [4,5], [3,4]], [[3,3], [2], [1]])
+    # print 'all done'
