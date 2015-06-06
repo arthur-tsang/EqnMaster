@@ -6,13 +6,12 @@ import theano.tensor as T
 from theano import function
 from theano.compile.function import function_dump
 
-from misc import try_load
 from gru_enc import GRUEnc
 from gru_dec import GRUDec
 
 # # For debugging:
 from theano import config
-#config.floatX = 'float32'
+config.floatX = 'float32'
 # config.optimizer = 'fast_compile'
 # config.exception_verbosity = 'high'
 
@@ -37,8 +36,8 @@ class GRUEncDec:
         
         # compiled functions
         print 'about to compile'
-        self.both_prop_compiled = try_load('functions/gru_prop_cpu.p', self.compile_both)
-        self.generate_function = try_load('functions/gru_gen.p', self.compile_generate)
+        self.both_prop_compiled = self.compile_both()
+        self.generate_function = self.compile_generate()
         print 'done compiling'
 
     def symbolic_f_prop(self, xs, ys):
@@ -52,7 +51,7 @@ class GRUEncDec:
 
         return dec_new_dparams + enc_new_dparams # python-list concatenation
 
-    def compile_both(self, filename):
+    def compile_both(self):
         """Compiles a function that computes both cost and deltas at the same time"""
 
         xs = T.ivector('xs')
@@ -61,8 +60,7 @@ class GRUEncDec:
         cost = self.symbolic_f_prop(xs, ys)
         new_dparams = self.symbolic_b_prop(cost)
 
-        function_dump(filename, [xs, ys], [cost] + new_dparams, allow_input_downcast=True)
-        # return function(...)
+        return function([xs, ys], [cost] + new_dparams, allow_input_downcast=True)
             
 
     def both_prop(self, xs, ys):
@@ -75,10 +73,9 @@ class GRUEncDec:
         ys = self.decoder.symbolic_generate(ch)
         return ys
 
-    def compile_generate(self, filename):
+    def compile_generate(self):
         xs = T.ivector('xs')
-        function_dump(filename, [xs], self.symbolic_generate(xs), allow_input_downcast=True)
-        # return function(...)
+        return function([xs], self.symbolic_generate(xs), allow_input_downcast=True)
 
     def generate_answer(self, xs):
         return self.generate_function(xs)
@@ -188,7 +185,7 @@ if __name__ == '__main__':
     gru.sgd(5, 200, X_train, Y_train)
 
     answer = gru.generate_answer([1,2,3])
-    print 'answer:', answer
+    # print 'answer:', answer
     
     # lstm = LSTMEncDec(12,12,12,12)
 
