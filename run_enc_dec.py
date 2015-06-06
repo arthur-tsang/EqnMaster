@@ -14,52 +14,62 @@ def ed_solve(ed, in_string):
 
 if __name__ == '__main__':
 
-    ## Filename to save ED
-    model_filename = 'models/ed_full.p'
+    #Ordering of arguments: file name, data type, hdim, wdim, batch size, epochs, data size, lr, reg, retrain
+
+    ## Filename to save EncDec
+    # model_filename = 'models/encdec_test.p'
+    model_filename = 'models/' + sys.argv[1]
 
     ## Data
-    X_train, Y_train = preprocess_data('data/3dig_train.p')
-    X_dev, Y_dev = preprocess_data('data/3dig_dev.p')
+    # train_file = 'data/3dig_train.p'
+    # dev_file = 'data/3dig_dev.p'
+    train_file = 'data/' + sys.argv[2] + '_train.p'
+    dev_file = 'data/' + sys.argv[2] + '_dev.p'
+    X_train, Y_train = preprocess_data(train_file, asNumpy = False)
+    X_dev, Y_dev = preprocess_data(dev_file, asNumpy=False)
 
     ## Hyperparameters
-    hdim = 50
-    wdim = 50
+    # hdim = 5
+    # wdim = 5
+    hdim = int(sys.argv[3])
+    wdim = int(sys.argv[4])
     outdim = len(outvocab)
     vdim = len(invocab)
-    batch_size = 1000
-    n_epochs = 5000
+    # batch_size = 100
+    # n_epochs = 1000
+    batch_size = int(sys.argv[5])
+    n_epochs = int(sys.argv[6])
 
-    X_train = X_train[:1000]
-    Y_train = Y_train[:1000]
+    # dataset_size = 1000
+    dataset_size = int(sys.argv[7])
+    X_train = X_train[:dataset_size]
+    Y_train = Y_train[:dataset_size]
     
     ## EncDec model train
-    ed = EncDec(vdim, hdim, wdim, outdim, alpha=0.001, rho = 0.0000)
-    #ed.grad_check(X_train[:10], Y_train[:10])
-    ed.load_model(model_filename) # if retraining
-    ed.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True, filename=model_filename)
-    # ed.save_model(model_filename)
+    # alpha = 0.01
+    # rho = 0.0000
+    alpha = float(sys.argv[8])
+    rho = float(sys.argv[9])
 
-    ## EncDec model test
-    # toy_problems = [decode(x, invocab) for x in X_train]
-    # toy_problems = ['5+15','17+98','7+7','3+7']
+    print "Training Enc-Dec"
+    print "hdim: %d wdim: %d lr: %f reg: %f epochs: %d batch_size: %d" % (hdim, wdim, alpha, rho, n_epochs, batch_size)
+    print "Num Examples: %d" % (dataset_size)
+    print "Data: " + train_file
+    print "Saving to " + model_filename
+    ed = EncDec(vdim, hdim, wdim, outdim, alpha=alpha, rho = rho)
+
+    if sys.argv[10] == 'retrain':
+        print 'Retraining'
+        ed.load_model(model_filename) # if retraining
+    ed.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=X_dev, Y_dev=Y_dev, verbose=True, filename=model_filename)
+    ed.save_model(model_filename)
+
+    # EncDec model test
+    toy_problems = [decode(x, invocab) for x in X_train]
     
-    L = ed.encoder.params['L']
-    #svd_visualize(np.transpose(L), invocab)
-    pca_visualize(np.transpose(L), invocab)
-    #multi_tsne(np.transpose(L), invocab)
+    # L = led.encoder.params['L']
+    # #svd_visualize(np.transpose(L), invocab, outfile = 'figs/svd_lstm.jpg')
+    # #pca_visualize(np.transpose(L), invocab, outfile = 'figs/pca_lstm.jpg')
 
-    # for toy in toy_problems:
-    #     print toy,'=',ed_solve(ed, toy)
-
-# Note that we can get the following kind of error during training:
-"""
-/home/arthur/Documents/cs224d/EqnMaster/enc.py:76: RuntimeWarning: divide by zero encountered in log
-  cost += -np.log(yhat[ys[t]])
-/home/arthur/Documents/cs224d/EqnMaster/dec.py:77: RuntimeWarning: divide by zero encountered in log
-  cost += -np.log(yhat[ys[t]])
-/home/arthur/Documents/cs224d/EqnMaster/nn/math.py:7: RuntimeWarning: invalid value encountered in subtract
-  xt = exp(x - max(x))
-"""
-# TODO: how should we account for this?
-# Remark: theano has something called local_log_softmax (stabilitzes softmax so it doesn't have us take the log of 0)
-# :)
+    for toy in toy_problems:
+        print toy,'=',model_solve(gru, toy)
