@@ -6,6 +6,25 @@ import numpy as np
 
 # TODO: this code style is horrible
 
+def composition_example():
+    def randnr():
+        return str(np.random.randint(1000))
+    def randop():
+        return np.random.choice(['+','-','*'])
+
+    a = randnr()
+    b = randnr()
+    c = randnr()
+    d = randnr()
+    op1 = randop()
+    op2 = randop()
+    op3 = randop()
+    
+    in_str = ''.join([a, op1, b, op2, c, op3, d])
+    out_str = str(eval(in_str))
+
+    return (in_str, out_str)
+
 def simple_example():
     first = np.random.randint(1000)
     second = np.random.randint(1000)
@@ -260,12 +279,51 @@ def generate_mult_discr_examples():
 
     print 'Generated discriminative data of sizes', len(train_dat), len(dev_dat), len(test_dat)
 
+def triple_pickle(train_filename, dev_filename, test_filename, train_dat, dev_dat, test_dat):
+    with open(train_filename, 'wb') as f:
+        pickle.dump(train_dat, f)
+    with open(dev_filename, 'wb') as f:
+        pickle.dump(dev_dat, f)
+    with open(test_filename, 'wb') as f:
+        pickle.dump(test_dat, f)
+    
+
+def generate_composition_examples():
+    n_train = 1000000
+    n_dev = 2000
+    n_test = 2000
+    
+    train_file = 'data/comp_train.p'
+    dev_file = 'data/comp_data.p'
+    test_file = 'data/comp_test.p'
+
+    n_tot = n_train + n_dev + n_test
+    all_examples = set()
+    while len(all_examples) < n_tot:
+        if len(all_examples) % 10000 == 0:
+            print 'len', len(all_examples)
+        all_examples.add(composition_example())
+
+    example_list = list(all_examples)
+    train_dat = example_list[:n_train]
+    dev_dat = example_list[n_train:n_train + n_dev]
+    test_dat = example_list[n_train + n_dev:]
+
+    triple_pickle(train_file, dev_file, test_file, train_dat, dev_dat, test_dat)
+
+    print 'generated composition examples'
+    
+    
+
 if __name__ == '__main__':
     # generate_examples()
     # generate_discr_examples()
     # generate_easy_examples()
     # generate_mult_examples()
     # generate_subtr_examples()
-    generate_subtr_discr_examples()
-    generate_mult_discr_examples()
+    # generate_subtr_discr_examples()
+    # generate_mult_discr_examples()
+    # generate_composition_examples()
+    #print composition_example()
+    
     
