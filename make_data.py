@@ -279,17 +279,16 @@ def generate_mult_discr_examples():
 
     print 'Generated discriminative data of sizes', len(train_dat), len(dev_dat), len(test_dat)
 
-def triple_pickle(train_filename, dev_filename, test_filename, train_dat, dev_dat, test_dat):
-    with open(train_filename, 'wb') as f:
-        pickle.dump(train_dat, f)
-    with open(dev_filename, 'wb') as f:
-        pickle.dump(dev_dat, f)
-    with open(test_filename, 'wb') as f:
-        pickle.dump(test_dat, f)
+def triple_pickle(filenames, datasets):
+    # Just a convenience function to help you pickle data
+    for filename, dat in zip(filenames, datasets):
+        assert(len(filename) > 1)
+        with open(filename, 'wb') as f:
+            pickle.dump(dat, f)
     
 
 def generate_composition_examples():
-    n_train = 1000000
+    n_train = 10000 # one million!
     n_dev = 2000
     n_test = 2000
     
@@ -309,7 +308,8 @@ def generate_composition_examples():
     dev_dat = example_list[n_train:n_train + n_dev]
     test_dat = example_list[n_train + n_dev:]
 
-    triple_pickle(train_file, dev_file, test_file, train_dat, dev_dat, test_dat)
+    #triple_pickle(['data/comp_train_short.p'],[train_dat[:10000]])
+    triple_pickle((train_file, dev_file, test_file), (train_dat, dev_dat, test_dat))
 
     print 'generated composition examples'
     
