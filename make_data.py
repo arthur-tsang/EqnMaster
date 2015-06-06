@@ -4,6 +4,8 @@ import pickle
 
 import numpy as np
 
+# TODO: this code style is horrible
+
 def simple_example():
     first = np.random.randint(1000)
     second = np.random.randint(1000)
@@ -44,6 +46,18 @@ def simple_discr_example():
         x, y1 = simple_example()
         y2 = simple_example()[1]
         return (x+' = '+y2, int(y1 == y2))
+
+def subtr_discr_example():
+    correct = np.random.random() < .5
+
+    if correct:
+        x,y = subtr_example()
+        return (x+' = '+y, 1)
+    else:
+        x, y1 = subtr_example()
+        y2 = subtr_example()[1]
+        return (x+' = '+y2, int(y1 == y2))
+
 
 def mult_discr_example():
     # Come up with an (x,y) pair that doesn't match
@@ -193,6 +207,33 @@ def generate_subtr_examples():
 
     print 'Generated positive examples of sizes', len(train_dat), len(dev_dat), len(test_dat)    
 
+def generate_subtr_discr_examples():
+    n_train = 10000
+    n_dev = 1000
+    n_test = 1000
+
+    train_file = 'data/d_subtr_train.p'
+    dev_file = 'data/d_subtr_dev.p'
+    test_file = 'data/d_subtr_test.p'
+
+    train_dat = [subtr_discr_example() for _ in xrange(n_train)]
+
+    dev_dat_raw = [subtr_discr_example() for _ in xrange(n_dev)]
+    dev_dat = [x for x in dev_dat_raw if x not in train_dat]
+
+    test_dat_raw = [subtr_discr_example() for _ in xrange(n_test)]
+    test_dat = [x for x in test_dat_raw if x not in train_dat and x not in dev_dat]
+
+    with open(train_file, 'w') as f:
+        pickle.dump(train_dat, f)
+    with open(dev_file, 'w') as f:
+        pickle.dump(dev_dat, f)
+    with open(test_file, 'w') as f:
+        pickle.dump(test_dat, f)
+
+    print 'Generated discrimintative examples of sizes', len(train_dat), len(dev_dat), len(test_dat)    
+
+
 def generate_mult_discr_examples():
     n_train = 10000
     n_dev = 2000
@@ -224,6 +265,7 @@ if __name__ == '__main__':
     # generate_discr_examples()
     # generate_easy_examples()
     # generate_mult_examples()
-    generate_subtr_examples()
-    
+    # generate_subtr_examples()
+    generate_subtr_discr_examples()
+    generate_mult_discr_examples()
     
