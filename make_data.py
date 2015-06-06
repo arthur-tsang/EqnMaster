@@ -288,7 +288,7 @@ def triple_pickle(filenames, datasets):
     
 
 def generate_composition_examples():
-    n_train = 10000 # one million!
+    n_train = 500000
     n_dev = 2000
     n_test = 2000
     
@@ -323,7 +323,6 @@ if __name__ == '__main__':
     # generate_subtr_examples()
     # generate_subtr_discr_examples()
     # generate_mult_discr_examples()
-    # generate_composition_examples()
+    generate_composition_examples()
     #print composition_example()
-    
     
