@@ -14,7 +14,6 @@ class LSTMEnc:
         # Dimensions
         self.vdim = vdim
         self.hdim = hdim
-        self.vdim = vdim
         self.wdim = wdim
 
         # Parameters
@@ -43,6 +42,7 @@ class LSTMEnc:
         self.Uc = shared(random_weight_matrix(hdim, hdim), name='Uc')
 
         self.params = [self.L, self.Wi, self.Ui, self.Wf, self.Uf, self.Wo, self.Uo, self.Wc, self.Uc]
+        self.vparams = [0.0*param.get_value() for param in self.params]
 
     def reset_grads(self):
         """Resets all grads to zero (maintaining shape!)"""
@@ -80,11 +80,15 @@ class LSTMEnc:
         reg_cost = 0.5 * self.rho * (np.sum(np.sum(param**2) for param in param_values))
         return (updates, reg_cost)
 
-    def symbolic_f_prop(self, xs, ch_prev):
+    def symbolic_f_prop(self, xs):
         """returns symbolic variable based on ch_prev and xs."""
-
+        # assert(len(xs[0]) > 0)
+        num_examples = xs.shape[1]
+        # print xs.type
+        h_prev = T.zeros([2*self.hdim, num_examples], dtype='float64')
+        # print type(h_prev[0, 0])
         results, updates = scan(fn = self.lstm_timestep, 
-                                outputs_info = ch_prev,
+                                outputs_info = h_prev,
                                 sequences = xs)
         return results[-1]
 
@@ -98,8 +102,8 @@ class LSTMEnc:
 
 if __name__ == '__main__':
     print 'Sanity check'
-    le = LSTMEnc(15,15,15)
+    gru = GRUEnc(15,15,15)
     xs = [1,2,3]
-    ch = le.f_prop(xs)
-    print ch
+    #ch = gru.f_prop(xs)
+    #print ch
     

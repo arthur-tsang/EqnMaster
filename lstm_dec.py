@@ -41,9 +41,10 @@ class LSTMDec:
         self.Uo = shared(random_weight_matrix(hdim, hdim), name='Uo')
         self.Uc = shared(random_weight_matrix(hdim, hdim), name='Uc')
         self.U  = shared(random_weight_matrix(outdim, hdim), name='U')
-        self.b  = shared(np.zeros(outdim), name='b')
+        self.b  = shared(np.zeros([outdim, 1]), name='b', broadcastable=(False, True))
 
         self.params = [self.Ui, self.Uf, self.Uo, self.Uc, self.U, self.b]
+        self.vparams = [0.0*param.get_value() for param in self.params]
 
         # # symbolic generate
         # ch_prev = T.vector('ch_prev')
@@ -55,11 +56,14 @@ class LSTMDec:
         for dparam in self.dparams:
             dparam.set_value(0.0 * dparam.get_value())
 
-
     def lstm_timestep(self, y_t, old_cost, ch_prev):
         """calculates info to pass to next time step.
-        x_t is a scalar; ch_prev is a vector of size 2*hdim"""
+        ch_prev is a vector of size 2*hdim"""
 
+        y_filtered_ind = T.ge(y_t, 0).nonzero()[0]
+        y_filtered = y_t[y_filtered_ind]
+
+        # break up into c and h
         c_prev = ch_prev[:self.hdim]#T.vector('c_prev')
         h_prev = ch_prev[self.hdim:]#T.vector('h_prev')
 
@@ -77,12 +81,12 @@ class LSTMDec:
         # Input vector for softmax
         theta_t = T.dot(self.U, h_t) + self.b
         # Softmax prob vector
-        y_hat_t = softmax(theta_t)
+        y_hat_t = softmax(theta_t.T).T
         # Softmax wraps output in another list, why??
         # (specifically it outputs a 2-d row, not a 1-d column)
-        y_hat_t = y_hat_t[0]
-        # Compute new cost
-        cost = -T.log(y_hat_t[y_t])
+        # y_hat_t = y_hat_t[0]
+        # Compute new cost # TODO
+        cost = T.sum(-T.log(y_hat_t[y_filtered, y_filtered_ind]))
 
         new_cost = old_cost + cost
 
@@ -99,14 +103,18 @@ class LSTMDec:
         return (updates, reg_cost)
 
 
-    def symbolic_f_prop(self, ys, ch_prev):
-        """returns symbolic variable based on ys and ch_prev."""
+    def symbolic_f_prop(self, ys, h_prev):
+        """returns symbolic variable based on ys and h_prev."""
+
+        # Make sure all the examples in ys have the same length by this point
+        # (by padding with -1)
+        # ys = np.array(ys)
 
         results, updates = scan(fn = self.lstm_timestep, 
-                                outputs_info = [np.float64(0.0), ch_prev],
+                                outputs_info = [np.float64(0.0), h_prev],
                                 sequences=ys)
 
-        # Results is a matrix!!
+        # Return the cost (index 0) at the most recent timestep (-1)
         return results[0][-1]
 
 
@@ -116,10 +124,10 @@ class LSTMDec:
             new_dparams.append(T.grad(cost_final, param))
 
         return new_dparams
-        
+
     def lstm_output(self, y_prev, ch_prev):
         """calculates info to pass to next time step.
-        x_t is a scalar; ch_prev is a vector of size 2*hdim"""
+        ch_prev is a vector of size 2*hdim"""
 
         c_prev = ch_prev[:self.hdim]#T.vector('c_prev')
         h_prev = ch_prev[self.hdim:]#T.vector('h_prev')
@@ -138,10 +146,10 @@ class LSTMDec:
         # Input vector for softmax
         theta_t = T.dot(self.U, h_t) + self.b
         # Softmax prob vector
-        y_hat_t = softmax(theta_t)
+        y_hat_t = softmax(theta_t.T).T
         # Softmax wraps output in another list, why??
         # (specifically it outputs a 2-d row, not a 1-d column)
-        y_hat_t = y_hat_t[0]
+        # y_hat_t = y_hat_t[0]
         # Compute new cost
         out_label = T.argmax(y_hat_t)
 
@@ -150,11 +158,11 @@ class LSTMDec:
 
         return (out_label, ch_t), scan_module.until(T.eq(out_label, self.out_end))
 
-    def symbolic_generate(self, ch_prev):
-        """generate ys from a given ch_prev"""
+    def symbolic_generate(self, h_prev):
+        """generate ys from a given h_prev"""
 
         results, updates = scan(fn = self.lstm_output, 
-                                outputs_info = [np.int64(0), ch_prev],
+                                outputs_info = [np.int64(0), h_prev],
                                 n_steps = 50)
 
 
