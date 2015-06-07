@@ -41,6 +41,7 @@ class GRUEnc:
         self.Uh = shared(random_weight_matrix(hdim, hdim), name='Uh')
 
         self.params = [self.L, self.Wz, self.Uz, self.Wr, self.Ur, self.Wh, self.Uh]
+        self.vparams = [0.0*param.get_value() for param in self.params]
 
     def reset_grads(self):
         """Resets all grads to zero (maintaining shape!)"""
@@ -64,9 +65,13 @@ class GRUEnc:
         reg_cost = 0.5 * self.rho * (np.sum(np.sum(param**2) for param in param_values))
         return (updates, reg_cost)
 
-    def symbolic_f_prop(self, xs, h_prev):
+    def symbolic_f_prop(self, xs):
         """returns symbolic variable based on ch_prev and xs."""
-
+        # assert(len(xs[0]) > 0)
+        num_examples = xs.shape[1]
+        # print xs.type
+        h_prev = T.zeros([self.hdim, num_examples], dtype='float64')
+        # print type(h_prev[0, 0])
         results, updates = scan(fn = self.gru_timestep, 
                                 outputs_info = h_prev,
                                 sequences = xs)

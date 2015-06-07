@@ -57,7 +57,7 @@ if __name__ == '__main__':
     if sys.argv[10] == 'retrain':
         print 'Retraining'
         gru.load_model(model_filename) # if retraining
-    gru.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=X_dev, Y_dev=Y_dev, verbose=True, filename=model_filename)
+    gru.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=X_dev, Y_dev=Y_dev, verbose=True, update_rule='momentum', filename=model_filename)
     gru.save_model(model_filename)
 
     # ## LSTMEncDec model test

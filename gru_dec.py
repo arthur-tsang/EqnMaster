@@ -40,9 +40,10 @@ class GRUDec:
         self.Ur = shared(random_weight_matrix(hdim, hdim), name='Ur')
         self.Uh = shared(random_weight_matrix(hdim, hdim), name='Uh')
         self.U  = shared(random_weight_matrix(outdim, hdim), name='U')
-        self.b  = shared(np.zeros(outdim), name='b')
+        self.b  = shared(np.zeros([outdim, 1]), name='b', broadcastable=(False, True))
 
         self.params = [self.Uz, self.Ur, self.Uh, self.U, self.b]
+        self.vparams = [0.0*param.get_value() for param in self.params]
 
         # # symbolic generate
         # ch_prev = T.vector('ch_prev')
@@ -56,6 +57,10 @@ class GRUDec:
 
     def gru_timestep(self, y_t, old_cost, h_prev):
 
+        y_filtered_ind = T.ge(y_t, 0).nonzero()[0]
+
+
+        y_filtered = y_t[y_filtered_ind]
         # gates (update, reset)
         z_t = sigmoid(T.dot(self.Uz, h_prev))
         r_t = sigmoid(T.dot(self.Ur, h_prev))
@@ -63,8 +68,9 @@ class GRUDec:
         h_new_t = T.tanh(r_t * T.dot(self.Uh, h_prev))
         h_t = z_t * h_prev + (1 - z_t) * h_new_t
         # compute new cost
-        y_hat_t = softmax(T.dot(self.U, h_t) + self.b)[0]
-        cost = -T.log(y_hat_t[y_t])
+        y_hat_t = softmax((T.dot(self.U, h_t) + self.b).T).T
+        cost = T.sum(-T.log(y_hat_t[y_filtered, y_filtered_ind]))
+        # We don't divide yet by batch size
         new_cost = old_cost + cost
         
         return new_cost, h_t
@@ -79,13 +85,17 @@ class GRUDec:
 
 
     def symbolic_f_prop(self, ys, h_prev):
-        """returns symbolic variable based on ys and ch_prev."""
+        """returns symbolic variable based on ys and h_prev."""
+
+        # Make sure all the examples in ys have the same length by this point
+        # (by padding with -1)
+        # ys = np.array(ys)
 
         results, updates = scan(fn = self.gru_timestep, 
                                 outputs_info = [np.float64(0.0), h_prev],
                                 sequences=ys)
 
-        # Results is a matrix!!
+        # Return the cost (index 0) at the most recent timestep (-1)
         return results[0][-1]
 
 
@@ -104,17 +114,17 @@ class GRUDec:
         h_new_t = T.tanh(r_t * T.dot(self.Uh, h_prev))
         h_t = z_t * h_prev + (1 - z_t) * h_new_t
         # compute new out_label
-        y_hat_t = softmax(T.dot(self.U, h_t) + self.b)[0]
+        y_hat_t = softmax((T.dot(self.U, h_t) + self.b).T).T
         out_label = T.argmax(y_hat_t)
         
         return (out_label, h_t), scan_module.until(T.eq(out_label, self.out_end))
 
 
-    def symbolic_generate(self, ch_prev):
-        """generate ys from a given ch_prev"""
+    def symbolic_generate(self, h_prev):
+        """generate ys from a given h_prev"""
 
         results, updates = scan(fn = self.gru_output, 
-                                outputs_info = [np.int64(0), ch_prev],
+                                outputs_info = [np.int64(0), h_prev],
                                 n_steps = 50)
 
 
