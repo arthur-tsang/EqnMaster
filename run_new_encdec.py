@@ -52,13 +52,13 @@ if __name__ == '__main__':
     print "Num Examples: %d" % (dataset_size)
     print "Data: " + train_file
     print "Saving to " + model_filename
-    gru = GRUEncDec(vdim, hdim, wdim, outdim, alpha=alpha, rho = rho)
+    new = NewEncDec(vdim, hdim, wdim, outdim, alpha=alpha, rho = rho)
 
     if sys.argv[10] == 'retrain':
         print 'Retraining'
-        gru.load_model(model_filename) # if retraining
-    gru.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=X_dev, Y_dev=Y_dev, verbose=True, update_rule='momentum', filename=model_filename)
-    gru.save_model(model_filename)
+        new.load_model(model_filename) # if retraining
+    new.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=X_dev, Y_dev=Y_dev, verbose=True, update_rule='momentum', filename=model_filename)
+    new.save_model(model_filename)
 
     # ## LSTMEncDec model test
     toy_problems = [decode(x, invocab) for x in X_train]
@@ -68,4 +68,4 @@ if __name__ == '__main__':
     # #pca_visualize(np.transpose(L), invocab, outfile = 'figs/pca_lstm.jpg')
 
     for toy in toy_problems:
-        print toy,'=',model_solve(gru, toy)
+        print toy,'=',model_solve(new, toy)
