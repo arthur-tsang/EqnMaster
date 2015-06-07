@@ -12,7 +12,7 @@ from misc import random_weight_matrix
 rng = np.random
 
 
-class NewDec:
+class RNNDec:
     
     def __init__(self, hdim, outdim, alpha=.005, rho=.0001, rseed=10):
         
@@ -34,39 +34,26 @@ class NewDec:
         ## Theano stuff
 
         # Params as theano.shared matrices
-        # W: times character-vector, U: times previous-hidden-vector
-        # i: input, f: forget, o: output, c: new-cell
-        self.Uz = shared(random_weight_matrix(hdim, hdim), name='Uz')
-        self.Ur = shared(random_weight_matrix(hdim, hdim), name='Ur')
-        self.Uh = shared(random_weight_matrix(hdim, hdim), name='Uh')
+        self.Wh = shared(random_weight_matrix(hdim, hdim), name='Wh')
         self.U  = shared(random_weight_matrix(outdim, hdim), name='U')
         self.b  = shared(np.zeros([outdim, 1]), name='b', broadcastable=(False, True))
 
-        self.params = [self.Uz, self.Ur, self.Uh, self.U, self.b]
+        self.params = [self.Wh, self.U, self.b]
         self.vparams = [0.0*param.get_value() for param in self.params]
-
-        # # symbolic generate
-        # ch_prev = T.vector('ch_prev')
-        # self.generate_function = function([ch_prev], self.symbolic_generate(ch_prev))
-        # print 'done compiling'
 
     def reset_grads(self):
         """Resets all grads to zero (maintaining shape!)"""
         for dparam in self.dparams:
             dparam.set_value(0.0 * dparam.get_value())
 
-    def gru_timestep(self, y_t, old_cost, h_prev):
+    def rnn_timestep(self, y_t, old_cost, h_prev):
 
         y_filtered_ind = T.ge(y_t, 0).nonzero()[0]
 
-
         y_filtered = y_t[y_filtered_ind]
-        # gates (update, reset)
-        z_t = sigmoid(T.dot(self.Uz, h_prev))
-        r_t = sigmoid(T.dot(self.Ur, h_prev))
-        # combine them
-        h_new_t = T.tanh(r_t * T.dot(self.Uh, h_prev))
-        h_t = z_t * h_prev + (1 - z_t) * h_new_t
+
+        h_t = T.tanh(T.dot(self.Wh, h_prev))
+
         # compute new cost
         y_hat_t = softmax((T.dot(self.U, h_t) + self.b).T).T
         cost = T.sum(-T.log(y_hat_t[y_filtered, y_filtered_ind]))
@@ -91,7 +78,7 @@ class NewDec:
         # (by padding with -1)
         # ys = np.array(ys)
 
-        results, updates = scan(fn = self.gru_timestep, 
+        results, updates = scan(fn = self.rnn_timestep, 
                                 outputs_info = [np.float64(0.0), h_prev],
                                 sequences=ys)
 
@@ -106,13 +93,8 @@ class NewDec:
 
         return new_dparams
         
-    def gru_output(self, y_prev, h_prev):
-        # gates (update, reset)
-        z_t = sigmoid(T.dot(self.Uz, h_prev))
-        r_t = sigmoid(T.dot(self.Ur, h_prev))
-        # combine them
-        h_new_t = T.tanh(r_t * T.dot(self.Uh, h_prev))
-        h_t = z_t * h_prev + (1 - z_t) * h_new_t
+    def rnn_output(self, y_prev, h_prev):
+        h_t = T.tanh(T.dot(self.Wh, h_prev))
         # compute new out_label
         y_hat_t = softmax((T.dot(self.U, h_t) + self.b).T).T
         out_label = T.argmax(y_hat_t)
@@ -123,7 +105,7 @@ class NewDec:
     def symbolic_generate(self, h_prev):
         """generate ys from a given h_prev"""
 
-        results, updates = scan(fn = self.gru_output, 
+        results, updates = scan(fn = self.rnn_output, 
                                 outputs_info = [np.int64(0), h_prev],
                                 n_steps = 50)
 

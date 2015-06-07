@@ -7,7 +7,7 @@ from misc import random_weight_matrix
 
 rng = np.random
 
-class GRUEnc:
+class RNNEnc:
 
     def __init__(self, vdim, hdim, wdim, alpha=.005, rho=.0001, rseed=10):
         
@@ -30,16 +30,11 @@ class GRUEnc:
 
         # Params as theano.shared matrices
         self.L = shared(random_weight_matrix(wdim, vdim), name='L')
-        # W: times character-vector, U: times previous-hidden-vector
-        # z: update, r: reset, h: new memory content (my notation)
-        self.Wz = shared(random_weight_matrix(hdim, wdim), name='Wz')
-        self.Uz = shared(random_weight_matrix(hdim, hdim), name='Uz')
-        self.Wr = shared(random_weight_matrix(hdim, wdim), name='Wr')
-        self.Ur = shared(random_weight_matrix(hdim, hdim), name='Ur')
-        self.Wh = shared(random_weight_matrix(hdim, wdim), name='Wh')
-        self.Uh = shared(random_weight_matrix(hdim, hdim), name='Uh')
+        self.Wx = shared(random_weight_matrix(hdim, wdim), name='Wx')
+        self.Wh = shared(random_weight_matrix(hdim, hdim), name='Wh')
 
-        self.params = [self.L, self.Wz, self.Uz, self.Wr, self.Ur, self.Wh, self.Uh]
+
+        self.params = [self.L, self.Wx, self.Wh]
         self.vparams = [0.0*param.get_value() for param in self.params]
 
     def reset_grads(self):
@@ -47,15 +42,10 @@ class GRUEnc:
         for dparam in self.dparams:
             dparam.set_value(0 * dparam.get_value())
 
-    def gru_timestep(self, x_t, h_prev):
-
+    def rnn_timestep(self, x_t, h_prev):
+        # So simple!
         Lx_t = self.L[:,x_t]
-        # gates (update, reset)
-        z_t = sigmoid(T.dot(self.Wz, Lx_t) + T.dot(self.Uz, h_prev))
-        r_t = sigmoid(T.dot(self.Wr, Lx_t) + T.dot(self.Ur, h_prev))
-        # combine them
-        h_new_t = T.tanh(T.dot(self.Wh, Lx_t) + r_t * T.dot(self.Uh, h_prev))
-        h_t = z_t * h_prev + (1 - z_t) * h_new_t
+        h_t = T.tanh(T.dot(self.Wx, Lx_t) + T.dot(self.Wh, h_prev))
         return h_t
 
     def reg_updates_cost(self):
@@ -71,7 +61,7 @@ class GRUEnc:
         # print xs.type
         h_prev = T.zeros([self.hdim, num_examples], dtype='float64')
         # print type(h_prev[0, 0])
-        results, updates = scan(fn = self.gru_timestep, 
+        results, updates = scan(fn = self.rnn_timestep, 
                                 outputs_info = h_prev,
                                 sequences = xs)
         return results[-1]
@@ -85,9 +75,9 @@ class GRUEnc:
         return new_dparams
 
 if __name__ == '__main__':
-    print 'Sanity check'
-    gru = GRUEnc(15,15,15)
-    xs = [1,2,3]
+    pass
+    # print 'Sanity check'
+    # gru = GRUEnc(15,15,15)
+    # xs = [1,2,3]
     #ch = gru.f_prop(xs)
     #print ch
-    

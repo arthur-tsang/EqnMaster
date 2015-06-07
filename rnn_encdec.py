@@ -4,9 +4,10 @@ import os.path
 
 import theano.tensor as T
 from theano import function
+from theano.compile.function import function_dump
 
-from gru_enc import GRUEnc
-from gru_dec import GRUDec
+from rnn_enc import RNNEnc
+from rnn_dec import RNNDec
 
 # # For debugging:
 from theano import config
@@ -16,7 +17,7 @@ config.floatX = 'float32'
 # config.exception_verbosity = 'high'
 
 
-class NewEncDec:
+class RNNEncDec:
     def __init__(self, vdim, hdim, wdim, outdim, alpha=.005, rho=.0001, mu=0.75, rseed = 10):
         # dimensions
         self.vdim = vdim
@@ -32,8 +33,8 @@ class NewEncDec:
         self.rseed = rseed
 
         # sub-models
-        self.encoder = GRUEnc(self.vdim, self.hdim, self.wdim, alpha=alpha, rho=rho, rseed=rseed)
-        self.decoder = GRUDec(self.hdim, self.outdim, alpha=alpha, rho=rho, rseed=rseed)
+        self.encoder = RNNEnc(self.vdim, self.hdim, self.wdim, alpha=alpha, rho=rho, rseed=rseed)
+        self.decoder = RNNDec(self.hdim, self.outdim, alpha=alpha, rho=rho, rseed=rseed)
         
         # compiled functions
         print 'about to compile'
@@ -265,13 +266,13 @@ class NewEncDec:
 
 
 if __name__ == '__main__':
-    gru = GRUEncDec(12, 12, 12, 12)
+    rnn = RNNEncDec(12, 12, 12, 12)
     
     X_train = [[1,2,3], [4,5]]
     Y_train = [[7,7,7], [2,3]]
-    gru.sgd(5, 200, X_train, Y_train)
+    rnn.sgd(5, 200, X_train, Y_train)
 
-    answer = gru.generate_answer([1,2,3])
+    answer = rnn.generate_answer([1,2,3])
     # print 'answer:', answer
     
     # lstm = LSTMEncDec(12,12,12,12)

@@ -7,7 +7,7 @@ from misc import random_weight_matrix
 
 rng = np.random
 
-class GRUEnc:
+class NewEnc:
 
     def __init__(self, vdim, hdim, wdim, alpha=.005, rho=.0001, rseed=10):
         
