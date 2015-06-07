@@ -10,11 +10,13 @@ from misc import get_data
 # Keep track of vocab as a string of certain characters
 outvocab = '0123456789-'
 invocab = outvocab + ' +*'
+invocab2 = invocab + '='
 # outdim = len(outvocab)
 # vdim = len(invocab)
 # Dictionary to look up index by character
 outdico = {c:i for i,c in enumerate(outvocab)}
 indico = {c:i for i,c in enumerate(invocab)}
+indico2 = {c:i for i,c in enumerate(invocab2)}
 
 
 def encode(nr_string, dico=indico, asNumpy = True):
@@ -45,3 +47,9 @@ def preprocess_data(train_file, asNumpy = True):
     X, Y = labelize(raw_data, asNumpy = asNumpy)
     
     return X,Y
+
+def extract_discr_data(train_file, asNumpy = True):
+    raw_data = get_data(train_file)
+    Y = [y for (_, y) in raw_data]
+    X = [encode(x, indico2, asNumpy = asNumpy) for x,y in raw_data]
+    return X, Y
