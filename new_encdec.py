@@ -174,7 +174,7 @@ class NewEncDec:
 
         # 1 epoch is 1 pass over training data
         for epoch in xrange(n_epochs):
-            #print "Epoch:", epoch
+            print "Epoch:", epoch
             # For every sub-iteration
             for i in xrange(iterations_per_epoch):
                 # print i
