@@ -55,7 +55,7 @@ class NewDec:
         for dparam in self.dparams:
             dparam.set_value(0.0 * dparam.get_value())
 
-    def gru_timestep(self, y_t, old_cost, h_prev):
+    def new_timestep(self, y_t, old_cost, h_prev):
 
         y_filtered_ind = T.ge(y_t, 0).nonzero()[0]
 
@@ -91,7 +91,7 @@ class NewDec:
         # (by padding with -1)
         # ys = np.array(ys)
 
-        results, updates = scan(fn = self.gru_timestep, 
+        results, updates = scan(fn = self.new_timestep, 
                                 outputs_info = [np.float64(0.0), h_prev],
                                 sequences=ys)
 
@@ -106,7 +106,7 @@ class NewDec:
 
         return new_dparams
         
-    def gru_output(self, y_prev, h_prev):
+    def new_output(self, y_prev, h_prev):
         # gates (update, reset)
         z_t = sigmoid(T.dot(self.Uz, h_prev))
         r_t = sigmoid(T.dot(self.Ur, h_prev))
@@ -123,7 +123,7 @@ class NewDec:
     def symbolic_generate(self, h_prev):
         """generate ys from a given h_prev"""
 
-        results, updates = scan(fn = self.gru_output, 
+        results, updates = scan(fn = self.new_output, 
                                 outputs_info = [np.int64(0), h_prev],
                                 n_steps = 50)
 
@@ -136,20 +136,20 @@ class NewDec:
 
 
 if __name__ == '__main__':
-    print 'Sanity check'
-    ld = LSTMDec(10,10,10)
-    # ys = [1,2,3,4]
-    # ch_prev = np.ones(2*ld.hdim)
-    # cost_final = ld.f_prop(ys, ch_prev)
-    # print cost_final
+    # print 'Sanity check'
+    # ld = LSTMDec(10,10,10)
+    # # ys = [1,2,3,4]
+    # # ch_prev = np.ones(2*ld.hdim)
+    # # cost_final = ld.f_prop(ys, ch_prev)
+    # # print cost_final
     
-    # ld.b_prop(ys, ch_prev)
-    # print 'printing dparams'
-    # for dparam in ld.dparams:
-    #     print dparam.get_value()
+    # # ld.b_prop(ys, ch_prev)
+    # # print 'printing dparams'
+    # # for dparam in ld.dparams:
+    # #     print dparam.get_value()
 
-    print 'testing generate'
-    print ld.generate(np.ones(2*ld.hdim))
-    print 'done testing'
+    # print 'testing generate'
+    # print ld.generate(np.ones(2*ld.hdim))
+    # print 'done testing'
 
     

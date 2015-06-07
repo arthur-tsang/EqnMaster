@@ -156,7 +156,8 @@ class NewEncDec:
     def sgd(self, batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True, update_rule='sgd', filename='models/tmp.p'):
         """Implentation of minibatch SGD over all training data (copied from enc_dec). End-tokens will be automatically added later"""
         Y_train = self.pad_data(Y_train)
-        Y_dev = self.pad_data(Y_dev)
+        if Y_dev is not None:
+            Y_dev = self.pad_data(Y_dev)
 
         # partitions is a list of 2D lists, one for each input length
         partitionX, partitionY = self.partition_XY(X_train, Y_train)
@@ -173,7 +174,7 @@ class NewEncDec:
 
         # 1 epoch is 1 pass over training data
         for epoch in xrange(n_epochs):
-            print "Epoch:", epoch
+            #print "Epoch:", epoch
             # For every sub-iteration
             for i in xrange(iterations_per_epoch):
                 # print i
@@ -202,14 +203,14 @@ class NewEncDec:
                 self.save_model(filename)
                 print "Epoch", epoch
                 tot_cost = 0.0
-                for i in range(51):
+                for i in range(min(51,N)):
                     single_X = np.array(X_train[i]).reshape([-1, 1])
                     single_Y = np.array(Y_train[i]).reshape([-1, 1])
                     tot_cost += self.process_batch(single_X, single_Y, shouldUpdate = False)
                 print "Training Cost (estimate):", tot_cost/51.0
                 if X_dev is not None:
                     tot_cost = 0.0
-                    for i in range(52):
+                    for i in range(min(52,N)):
                         single_X = np.array(X_dev[i]).reshape([-1, 1])
                         single_Y = np.array(Y_dev[i]).reshape([-1, 1])
                         tot_cost += self.process_batch(single_X, single_Y, shouldUpdate = False)
@@ -234,10 +235,10 @@ class NewEncDec:
 
     def pad_data(self, Y_train):
         # Pads all lists in Y_train with -1 to have same length
-       max_len = max(len(ylist) for ylist in Y_train)
-       Y_train_padded = [self.pad_list(max_len, single_list) for single_list in Y_train]
-       return Y_train_padded
-
+        max_len = max(len(ylist) for ylist in Y_train)
+        Y_train_padded = [self.pad_list(max_len, single_list) for single_list in Y_train]
+        return Y_train_padded
+       
     def pad_list(self, max_len, single_list):
         # Pads a single list with -1 to reach a max len; also adds end token
         padding_needed = max_len - len(single_list)
@@ -265,22 +266,14 @@ class NewEncDec:
 
 
 if __name__ == '__main__':
-    gru = GRUEncDec(12, 12, 12, 12)
+    new = NewEncDec(12, 12, 12, 12)
     
     X_train = [[1,2,3], [4,5]]
     Y_train = [[7,7,7], [2,3]]
-    gru.sgd(5, 200, X_train, Y_train)
+    new.sgd(5, 1000, X_train, Y_train, update_rule='momentum')
 
-    answer = gru.generate_answer([1,2,3])
-    # print 'answer:', answer
+    answer = new.generate_answer([1,2,3])
+    print 'answer:', answer
+    answer2 = new.generate_answer([4,5])
+    print 'answer2:', answer2
     
-    # lstm = LSTMEncDec(12,12,12,12)
-
-    # print 'processing batch'
-    # cost1 = lstm.process_batch([[3,2]],[[0,0]])
-    # cost2 = lstm.process_batch([[1,2,3]],[[2,2,2]])
-    # cost3 = lstm.process_batch([[1,2,3],[2,2,2]], [[3,2],[0,0]])
-    # print cost1, cost2, cost3
-    # print lstm.generate_answer([1,2,3])
-    # lstm.sgd(2, 2, [[1,2,3], [4,5], [3,4]], [[3,3], [2], [1]])
-    # print 'all done'

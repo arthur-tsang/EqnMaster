@@ -58,9 +58,8 @@ class GRUDec:
     def gru_timestep(self, y_t, old_cost, h_prev):
 
         y_filtered_ind = T.ge(y_t, 0).nonzero()[0]
-
-
         y_filtered = y_t[y_filtered_ind]
+
         # gates (update, reset)
         z_t = sigmoid(T.dot(self.Uz, h_prev))
         r_t = sigmoid(T.dot(self.Ur, h_prev))

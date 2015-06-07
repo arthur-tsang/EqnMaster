@@ -31,33 +31,44 @@ class NewEnc:
 
         # Params as theano.shared matrices
         self.L = shared(random_weight_matrix(wdim, vdim), name='L')
-        # W: times character-vector, U: times previous-hidden-vector
-        # z: update, r: reset, h: new memory content (my notation)
-        self.Wz = shared(random_weight_matrix(hdim, wdim), name='Wz')
-        self.Uz = shared(random_weight_matrix(hdim, hdim), name='Uz')
-        self.Wr = shared(random_weight_matrix(hdim, wdim), name='Wr')
-        self.Ur = shared(random_weight_matrix(hdim, hdim), name='Ur')
+        self.Wx = shared(random_weight_matrix(hdim, wdim), name='Wx')
+        self.Wxm = shared(random_weight_matrix(hdim, hdim), name='Wxm')
         self.Wh = shared(random_weight_matrix(hdim, wdim), name='Wh')
-        self.Uh = shared(random_weight_matrix(hdim, hdim), name='Uh')
+        self.Whm = shared(random_weight_matrix(hdim, wdim), name='Whm')
 
-        self.params = [self.L, self.Wz, self.Uz, self.Wr, self.Ur, self.Wh, self.Uh]
+        self.params = [self.L, self.Wx, self.Wxm, self.Wh, self.Whm]
         self.vparams = [0.0*param.get_value() for param in self.params]
+
+        # # Compile stuff
+        # xs = T.imatrix('xs')
+        # self.f = function([xs], self.symbolic_f_prop(xs), allow_input_downcast=True)
 
     def reset_grads(self):
         """Resets all grads to zero (maintaining shape!)"""
         for dparam in self.dparams:
             dparam.set_value(0 * dparam.get_value())
 
-    def gru_timestep(self, x_t, h_prev):
-
+    def rnn_timestep(self, x_t, h_prev, Lxm_t):
+        # So simple!
         Lx_t = self.L[:,x_t]
-        # gates (update, reset)
-        z_t = sigmoid(T.dot(self.Wz, Lx_t) + T.dot(self.Uz, h_prev))
-        r_t = sigmoid(T.dot(self.Wr, Lx_t) + T.dot(self.Ur, h_prev))
-        # combine them
-        h_new_t = T.tanh(T.dot(self.Wh, Lx_t) + r_t * T.dot(self.Uh, h_prev))
-        h_t = z_t * h_prev + (1 - z_t) * h_new_t
+        h_t = T.tanh(T.dot(self.Wx, Lx_t) + T.dot(self.Wxm, Lxm_t) + T.dot(self.Wh, h_prev))
         return h_t
+        
+    def meta_rnn_timestep(self, xm_t, h_meta_prev, num_examples, xs):
+        
+        Lxm_t = self.L[:,xm_t]
+        
+        # calculate regular rnn timestep
+        h_prev = T.zeros([self.hdim, num_examples], dtype='float64')
+        results, updates = scan(fn = self.rnn_timestep, 
+                                outputs_info = h_prev,
+                                sequences = xs,
+                                non_sequences = Lxm_t)
+        h_t = results[-1]
+
+        h_meta_t = T.tanh(T.dot(self.Whm, h_t))
+        return h_meta_t
+
 
     def reg_updates_cost(self):
         param_values = [param.get_value() for param in self.params]
@@ -70,11 +81,11 @@ class NewEnc:
         # assert(len(xs[0]) > 0)
         num_examples = xs.shape[1]
         # print xs.type
-        h_prev = T.zeros([self.hdim, num_examples], dtype='float64')
-        # print type(h_prev[0, 0])
-        results, updates = scan(fn = self.gru_timestep, 
-                                outputs_info = h_prev,
-                                sequences = xs)
+        h_meta_prev = T.zeros([self.hdim, num_examples], dtype='float64')
+        results, updates = scan(fn = self.meta_rnn_timestep, 
+                                outputs_info = h_meta_prev,
+                                sequences = xs,
+                                non_sequences = [num_examples, xs])
         return results[-1]
 
 
@@ -87,8 +98,9 @@ class NewEnc:
 
 if __name__ == '__main__':
     print 'Sanity check'
-    gru = GRUEnc(15,15,15)
-    xs = [1,2,3]
+    new = NewEnc(15,15,15)
+    xs = np.array([1,2,3]).reshape([-1,1])
+    print new.f(xs)
     #ch = gru.f_prop(xs)
     #print ch
     

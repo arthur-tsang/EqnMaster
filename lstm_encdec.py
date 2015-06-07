@@ -157,7 +157,8 @@ class LSTMEncDec:
     def sgd(self, batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True, update_rule='sgd', filename='models/tmp.p'):
         """Implentation of minibatch SGD over all training data (copied from enc_dec). End-tokens will be automatically added later"""
         Y_train = self.pad_data(Y_train)
-        Y_dev = self.pad_data(Y_dev)
+        if Y_dev is not None:
+            Y_dev = self.pad_data(Y_dev)
 
         # partitions is a list of 2D lists, one for each input length
         partitionX, partitionY = self.partition_XY(X_train, Y_train)

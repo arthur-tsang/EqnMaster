@@ -3,7 +3,7 @@
 import numpy as np
 import sys
 
-from gru_encdec import GRUEncDec
+from new_encdec import NewEncDec
 #from visualize_vecs import svd_visualize, tsne_visualize, pca_visualize
 
 from run_helpers import decode, model_solve, preprocess_data, outvocab, invocab
