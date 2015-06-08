@@ -1,7 +1,6 @@
 import numpy as np
 import pickle
 import os.path
-from collections import OrderedDict
 
 import theano.tensor as T
 from theano import function
@@ -39,7 +38,6 @@ class GRUEncDec:
         
         # compiled functions
         print 'about to compile'
-        #self.update_compiled = self.compile_update()
         self.both_prop_compiled = self.compile_both()
         self.generate_function = self.compile_generate()
         print 'done compiling'
@@ -65,40 +63,14 @@ class GRUEncDec:
         cost = self.symbolic_f_prop(xs, ys)
         new_dparams = self.symbolic_b_prop(cost)
 
-        # # updates stuff
-        batch_size = T.iscalar('batch_size')
-        dparams = [1. * new_dparam / batch_size for new_dparam in new_dparams]
-        params = self.decoder.params + self.encoder.params # python lists
-        # # assuming sgd for now (for simplicity's sake)
-        updates = {param:(param - self.alpha * dparam) for param, dparam in zip(params, dparams)}
+        return function([xs, ys], [cost] + new_dparams, allow_input_downcast=True)
+            
 
-        return function([xs, ys, batch_size], cost, allow_input_downcast=True, updates=updates)
-
-    # def symbolic_update(self, dparams):
-    #     # assuming sgd for now
-    #     params = self.decoder.params + self.encoder.params # python lists
-    #     updates_list = [(param, param - self.alpha * dparam) for param, dparam in zip(params, dparams)]
-    #     updates_dict = OrderedDict(updates_list) # guarantee deterministic order
-
-    #     # print 'updates_dict', updates_dict
-
-    #     return updates_dict
-
-    # def compile_update(self):
-    #     params = self.decoder.params + self.encoder.params
-    #     dparams = [T.TensorVariable(param.type) for param in params]
-
-    #     def unwrapper(dparams_numeric):
-    #         function(dparams, updates=self.symbolic_update(dparams))(*dparams_numeric)
-
-    #     return unwrapper
-
-
-    def both_prop(self, xs, ys, batch_size=1):
+    def both_prop(self, xs, ys):
 
         """Like f_prop, but also returns updates for bprop"""
         # return self.both_prop_compiled(xs, ys + [self.out_end])
-        return self.both_prop_compiled(xs, ys, batch_size)
+        return self.both_prop_compiled(xs, ys)
         
 
     def symbolic_generate(self, xs):
@@ -119,33 +91,33 @@ class GRUEncDec:
         return ys
 
 
-    # def update_params(self, dec_enc_new_dparams, update_rule):
-    #     """Updates params of both decoder and encoder according to deltas given"""
+    def update_params(self, dec_enc_new_dparams, update_rule):
+        """Updates params of both decoder and encoder according to deltas given"""
 
-    #     num_dec_params = len(self.decoder.params)
+        num_dec_params = len(self.decoder.params)
 
-    #     # Decoder
-    #     for index, dparam in enumerate(dec_enc_new_dparams[:num_dec_params]):
-    #         if update_rule == 'sgd':
-    #             self.decoder.params[index].set_value(self.decoder.params[index].get_value() - self.alpha * dparam)
-    #         elif update_rule == 'momentum':
-    #             v_prev = self.decoder.vparams[index]
-    #             v = v_prev*self.mu  - self.alpha * dparam
+        # Decoder
+        for index, dparam in enumerate(dec_enc_new_dparams[:num_dec_params]):
+            if update_rule == 'sgd':
+                self.decoder.params[index].set_value(self.decoder.params[index].get_value() - self.alpha * dparam)
+            elif update_rule == 'momentum':
+                v_prev = self.decoder.vparams[index]
+                v = v_prev*self.mu  - self.alpha * dparam
 
-    #             self.decoder.params[index].set_value(self.decoder.params[index].get_value() + v)
-    #             self.decoder.vparams[index] = v
+                self.decoder.params[index].set_value(self.decoder.params[index].get_value() + v)
+                self.decoder.vparams[index] = v
 
-    #     # Encoder
-    #     for index, dparam in enumerate(dec_enc_new_dparams[num_dec_params:]):
-    #         if update_rule == 'sgd':
-    #             self.encoder.params[index].set_value(self.encoder.params[index].get_value() - self.alpha * dparam)
-    #         elif update_rule == 'momentum':
+        # Encoder
+        for index, dparam in enumerate(dec_enc_new_dparams[num_dec_params:]):
+            if update_rule == 'sgd':
+                self.encoder.params[index].set_value(self.encoder.params[index].get_value() - self.alpha * dparam)
+            elif update_rule == 'momentum':
 
-    #             v_prev = self.encoder.vparams[index]
-    #             v = v_prev*self.mu  - self.alpha * dparam
+                v_prev = self.encoder.vparams[index]
+                v = v_prev*self.mu  - self.alpha * dparam
 
-    #             self.encoder.params[index].set_value(self.encoder.params[index].get_value() + v)
-    #             self.encoder.vparams[index] = v
+                self.encoder.params[index].set_value(self.encoder.params[index].get_value() + v)
+                self.encoder.vparams[index] = v
 
 
     def process_batch(self, all_xs, all_ys, shouldUpdate = True, update_rule='sgd'):
@@ -158,15 +130,9 @@ class GRUEncDec:
         # tot_cost = 0.0
         batch_size = all_xs.shape[1]
         # for xs, ys in zip(all_xs, all_ys):
-        
-        # TODO: the following is wrong because
-        # - no regularization
-        # - not clear how to do momentum update
-        # - will always update when called (but we can fix that)
-        tot_cost = self.both_prop(all_xs, all_ys, batch_size=batch_size) # also modifies updates
-        # cost_and_dparams = self.both_prop(all_xs, all_ys)
-        # tot_cost = cost_and_dparams[0]
-        # dparams = [dparam/float(batch_size) for dparam in cost_and_dparams[1:]]
+        cost_and_dparams = self.both_prop(all_xs, all_ys)
+        tot_cost = cost_and_dparams[0]
+        dparams = [dparam/float(batch_size) for dparam in cost_and_dparams[1:]]
         
         # all_dparams.append(dparams)
         # tot_cost += cost
@@ -178,15 +144,11 @@ class GRUEncDec:
         e_reg_updates, e_reg_cost = self.encoder.reg_updates_cost()
         d_reg_updates, d_reg_cost = self.decoder.reg_updates_cost()
 
-        #dparams_tot = [(avg + reg) for (avg, reg) in zip(dparams, d_reg_updates + e_reg_updates)]
+        dparams_tot = [(avg + reg) for (avg, reg) in zip(dparams, d_reg_updates + e_reg_updates)]
 
-        # if shouldUpdate:
-        #     #print 'dparams_tot', dparams_tot
-        #     self.update_compiled(dparams_tot)
-
-        # if shouldUpdate:
-        #     self.update_params(dparams_tot, update_rule)
-        #     # self.update_params(d_reg_updates + e_reg_updates)
+        if shouldUpdate:
+            self.update_params(dparams_tot, update_rule)
+            # self.update_params(d_reg_updates + e_reg_updates)
         
         final_cost = (float(tot_cost) / batch_size) + e_reg_cost + d_reg_cost
         
@@ -204,7 +166,7 @@ class GRUEncDec:
         # Weights for random sampling, given by how many examples are there for each size
         size_probs = np.array([len(size_matrix) for size_matrix in partitionX])
         size_probs = size_probs/float(np.sum(size_probs))
-        # print "Sum of Probs:", np.sum(size_probs)
+        print "Sum of Probs:", np.sum(size_probs)
         print 'Training:'
         print 'Train Set Size:', len(Y_train)
 
@@ -242,14 +204,14 @@ class GRUEncDec:
                 self.save_model(filename)
                 print "Epoch", epoch
                 tot_cost = 0.0
-                for i in range(min(N, 51)):
+                for i in range(51):
                     single_X = np.array(X_train[i]).reshape([-1, 1])
                     single_Y = np.array(Y_train[i]).reshape([-1, 1])
                     tot_cost += self.process_batch(single_X, single_Y, shouldUpdate = False)
                 print "Training Cost (estimate):", tot_cost/51.0
                 if X_dev is not None:
                     tot_cost = 0.0
-                    for i in range(min(N, 52)):
+                    for i in range(52):
                         single_X = np.array(X_dev[i]).reshape([-1, 1])
                         single_Y = np.array(Y_dev[i]).reshape([-1, 1])
                         tot_cost += self.process_batch(single_X, single_Y, shouldUpdate = False)
