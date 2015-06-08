@@ -6,12 +6,14 @@
 
 import os.path
 import pickle
-from run_enc_dec import ed_solve
-from enc_dec import EncDec
-from naive_rnnlm import NaiveRnnlm
-from naive_rnnlm_discr import NaiveRnnlmDiscr
+#from run_enc_dec import ed_solve
+#from enc_dec import EncDec
+#from naive_rnnlm import NaiveRnnlm
+#from naive_rnnlm_discr import NaiveRnnlmDiscr
 from baseline import BigramBaseline
 from misc import lengthen, get_data
+
+from visualize_vecs import svd_visualize, pca_visualize
 
 from gru_encdec import GRUEncDec
 from lstm_encdec import LSTMEncDec
@@ -21,6 +23,8 @@ from d_gru import DGRU
 
 import run_helpers # doesn't allow '-' signs
 import run_helpers2 # allows '-' signs
+
+
 
 # def bool_metric(correct, given):
 #     return int(correct == given)
@@ -130,35 +134,44 @@ if __name__ == '__main__':
     add7_dev = get_data('data/7dig_dev.p')
 
 
-    # TESTING LSTMs
+    # # TESTING LSTMs
     
     # lstm = LSTMEncDec(len(run_helpers.invocab), 50, 50, len(run_helpers.outvocab))
     # lstm.load_model('models/lstm_add_full.p')
     # lstm_fn = lambda x: run_helpers.model_solve(lstm, x)
     # print 'lstm add train', eval_model(lstm_fn, add_train)
     # print 'lstm add dev', eval_model(lstm_fn, add_dev)
+    
+    # svd_visualize(lstm.encoder.params[0].get_value().T, run_helpers.invocab, outfile='figs/lstm_add_svd.jpg', title='Word vectors - LSTM addition')
+    
 
     # lstm.load_model('models/lstm_mult_full.p') # not ready yet
-    # print 'lstm mult train', eval_model(lstm_fn, mult_train)
-    # print 'lstm mult dev', eval_model(lstm_fn, mult_dev)
+    # # print 'lstm mult train', eval_model(lstm_fn, mult_train)
+    # # print 'lstm mult dev', eval_model(lstm_fn, mult_dev)
 
-    lstm = LSTMEncDec(len(run_helpers2.invocab), 50, 50, len(run_helpers2.outvocab))
-    lstm.load_model('models/lstm_subtr_full.p')
-    lstm_fn = lambda x: run_helpers2.model_solve(lstm, x)
-    print 'lstm subtr train', eval_model(lstm_fn, subtr_train)
-    print 'lstm subtr dev', eval_model(lstm_fn, subtr_dev)
+    # svd_visualize(lstm.encoder.params[0].get_value().T, run_helpers.invocab, outfile='figs/lstm_mult_svd.jpg', title='Word vectors - LSTM multiplication')
+
+
+    # lstm = LSTMEncDec(len(run_helpers2.invocab), 50, 50, len(run_helpers2.outvocab))
+    # lstm.load_model('models/lstm_subtr_full.p')
+    # lstm_fn = lambda x: run_helpers2.model_solve(lstm, x)
+    # print 'lstm subtr train', eval_model(lstm_fn, subtr_train)
+    # print 'lstm subtr dev', eval_model(lstm_fn, subtr_dev)
     
-    
+    # svd_visualize(lstm.encoder.params[0].get_value().T, run_helpers2.invocab, outfile='figs/lstm_subtr_svd.jpg', title='Word vectors - LSTM subtraction')
 
     # TESTING GRUs
     
-    # gru_add = GRUEncDec(len(run_helpers.invocab), 50, 50, len(run_helpers.outvocab))
-    # gru_add.load_model('models/gru_add_full.p')
+    #gru_add = GRUEncDec(len(run_helpers.invocab), 50, 50, len(run_helpers.outvocab))
+    #gru_add.load_model('models/gru_add_full.p')
     # gru_add_fn = lambda x: run_helpers.model_solve(gru_add, x)
     # print 'gru add train', eval_model(gru_add_fn, add_train)
     # print 'gru add dev', eval_model(gru_add_fn, add_dev)
     # print 'gru add train strict', eval_model(gru_add_fn, add_train, metric=strict_metric)
     # print 'gru add dev strict', eval_model(gru_add_fn, add_dev, metric=strict_metric)
+
+    # svd_visualize(gru_add.encoder.params[0].get_value().T, run_helpers.invocab, outfile='figs/gru_add_svd.jpg', title='Word vectors - GRU addition')
+    # pca_visualize(gru_add.encoder.params[0].get_value().T, run_helpers.invocab, outfile='figs/gru_add_pca3d.jpg', title='Word vectors - GRU addition')
 
     # print 'gru add4 dev', eval_model(gru_add_fn, add4_dev)
     # print 'gru add5 dev', eval_model(gru_add_fn, add5_dev)
@@ -166,16 +179,17 @@ if __name__ == '__main__':
     # print 'gru add7 dev', eval_model(gru_add_fn, add7_dev)
 
 
-    # gru_subtr = GRUEncDec(len(run_helpers2.invocab), 50, 50, len(run_helpers2.outvocab))
-    # gru_subtr.load_model('models/gru_subtr_full.p')
+    gru_subtr = GRUEncDec(len(run_helpers2.invocab), 50, 50, len(run_helpers2.outvocab))
+    gru_subtr.load_model('models/gru_subtr_full.p')
     # gru_subtr_fn = lambda x: run_helpers2.model_solve(gru_subtr, x)
     # print 'gru subtr train', eval_model(gru_subtr_fn, subtr_train)
     # print 'gru subtr dev', eval_model(gru_subtr_fn, subtr_dev)
     # print 'gru subtr train strict', eval_model(gru_subtr_fn, subtr_train, metric=strict_metric)
     # print 'gru subtr dev strict', eval_model(gru_subtr_fn, subtr_dev, metric=strict_metric)
 
-
+    #svd_visualize(gru_subtr.encoder.params[0].get_value().T, run_helpers.invocab, outfile='figs/gru_subtr_svd.jpg', title='Word vectors - GRU subtraction')
     
+    pca_visualize(gru_subtr.encoder.params[0].get_value().T, run_helpers.invocab, outfile='figs/gru_subtr_pca3d.jpg', title='Word vectors - GRU subtraction')
     
     # discriminative_test()
 
@@ -188,6 +202,9 @@ if __name__ == '__main__':
 
 
 
+
+
+    # Just ignore what's below this line really
 
     # train_data = get_data('data/3dig_train.p')
     # dev_data = get_data('data/3dig_dev.p')

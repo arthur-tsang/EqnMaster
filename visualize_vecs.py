@@ -14,7 +14,7 @@ def annotate(xs,ys,labels):
                 plt.scatter(x,y)
                 plt.annotate(char, xy=(x,y))
 
-def svd_visualize(L, labels, outfile='figs/svd.jpg'):
+def svd_visualize(L, labels, outfile='figs/svd.jpg', title='Word vectors SVD'):
         """Visualize L, which we assume is given as an np array of rows"""
 	U, S, V = np.linalg.svd(L)
 	#datapoints = U[:,:2]
@@ -24,7 +24,7 @@ def svd_visualize(L, labels, outfile='figs/svd.jpg'):
 
         #plt.xkcd() # Yes!
         fig = plt.figure()
-        fig.suptitle('Word vectors SVD')
+        fig.suptitle(title)
 
         annotate(data_x, data_y, labels)
 
@@ -62,7 +62,7 @@ def multi_tsne(L, labels):
                 print 'perp', perplexity
                 tsne_visualize(L, labels, perplexity=perplexity)
 
-def pca_visualize(L, labels, outfile = 'figs/pca.jpg'):
+def pca_visualize(L, labels, outfile = 'figs/pca.jpg', title='Word vectors PCA'):
         pca = decomposition.PCA(n_components = 3)
         pca.fit(L)
         points = pca.transform(L)
@@ -76,7 +76,7 @@ def pca_visualize(L, labels, outfile = 'figs/pca.jpg'):
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        fig.suptitle('Word vectors PCA')
+        fig.suptitle(title)
 
         ax.scatter(data_x, data_y, data_z)
         #annotate(data_x, data_y, labels)
