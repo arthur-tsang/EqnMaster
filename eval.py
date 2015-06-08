@@ -128,17 +128,31 @@ if __name__ == '__main__':
 
     # TESTING discriminative stuff
 
-    # drnn_mult = DRNN(len(run_helpers2.invocab), 50, 50, len(run_helpers2.outvocab))
-    # drnn_mult.load_model('models/drnn_mult_full.p')
-    # drnn_mult_fn = lambda x: run_helpers2.model_solve_discr(drnn_mult, x)
-    # print 'drnn mult train', eval_model(drnn_mult_fn, discr_mult_train, metric=strict_metric)
-    # print 'drnn mult dev', eval_model(drnn_mult_fn, discr_mult_dev, metric=strict_metric)
+    drnn = DRNN(len(run_helpers2.invocab), 50, 50, len(run_helpers2.outvocab))
+    drnn.load_model('models/drnn_mult_full.p')
+    drnn_fn = lambda x: run_helpers2.model_solve_discr(drnn, x)
+    print 'drnn mult train', eval_model(drnn_fn, discr_mult_train, metric=strict_metric)
+    print 'drnn mult dev', eval_model(drnn_fn, discr_mult_dev, metric=strict_metric)
 
-    dgru_mult = DGRU(len(run_helpers2.invocab), 50, 50, len(run_helpers2.outvocab))
-    dgru_mult.load_model('models/dgru_mult_full.p')
-    dgru_mult_fn = lambda x: run_helpers2.model_solve_discr(dgru_mult, x)
-    print 'dgru mult train', eval_model(dgru_mult_fn, discr_mult_train, metric=stric_metric)
-    print 'dgru mult dev', eval_model(dgru_mult_fn, discr_mult_dev, metric=stric_metric)
+    drnn.load_model('models/drnn_subtr_full.p')
+    print 'drnn subtr train', eval_model(drnn_fn, discr_subtr_train, metric=strict_metric)
+    print 'drnn subtr dev', eval_model(drnn_fn, discr_subtr_dev, metric=strict_metric)
+
+    dgru = DGRU(len(run_helpers2.invocab), 50, 50, len(run_helpers2.outvocab))
+    dgru.load_model('models/dgru_mult_full.p')
+    dgru_fn = lambda x: run_helpers2.model_solve_discr(dgru, x)
+    print 'dgru mult train', eval_model(dgru_fn, discr_mult_train, metric=strict_metric)
+    print 'dgru mult dev', eval_model(dgru_fn, discr_mult_dev, metric=strict_metric)
+
+    dgru.load_model('models/dgru_add_full.p')
+    print 'dgru add train', eval_model(dgru_fn, discr_add_train, metric=strict_metric)
+    print 'dgru add dev', eval_model(dgru_fn, discr_add_dev, metric=strict_metric)
+
+    dgru.load_model('models/dgru_subtr_full.p')
+    print 'dgru subtr train', eval_model(dgru_fn, discr_subtr_train, metric=strict_metric)
+    print 'dgru subtr dev', eval_model(dgru_fn, discr_subtr_dev, metric=strict_metric)
+    
+    
 
 
 
