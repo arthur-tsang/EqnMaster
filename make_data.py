@@ -282,7 +282,7 @@ def generate_composition_examples():
     n_test = 2000
     
     train_file = 'data/comp_train.p'
-    dev_file = 'data/comp_data.p'
+    dev_file = 'data/comp_dev.p'
     test_file = 'data/comp_test.p'
 
     n_tot = n_train + n_dev + n_test
@@ -308,7 +308,7 @@ def generate_discr_composition_examples():
     n_test = 2000
     
     train_file = 'data/d_comp_train.p'
-    dev_file = 'data/d_comp_data.p'
+    dev_file = 'data/d_comp_dev.p'
     test_file = 'data/d_comp_test.p'
 
     n_tot = n_train + n_dev + n_test

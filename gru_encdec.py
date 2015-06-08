@@ -39,7 +39,7 @@ class GRUEncDec:
         
         # compiled functions
         print 'about to compile'
-        self.update_compiled = self.compile_update()
+        #self.update_compiled = self.compile_update()
         self.both_prop_compiled = self.compile_both()
         self.generate_function = self.compile_generate()
         print 'done compiling'
@@ -67,7 +67,7 @@ class GRUEncDec:
 
         # # updates stuff
         batch_size = T.iscalar('batch_size')
-        dparams = 1. * new_dparams / batch_size
+        dparams = [1. * new_dparam / batch_size for new_dparam in new_dparams]
         params = self.decoder.params + self.encoder.params # python lists
         # # assuming sgd for now (for simplicity's sake)
         updates = {param:(param - self.alpha * dparam) for param, dparam in zip(params, dparams)}
@@ -94,11 +94,11 @@ class GRUEncDec:
     #     return unwrapper
 
 
-    def both_prop(self, xs, ys):
+    def both_prop(self, xs, ys, batch_size=1):
 
         """Like f_prop, but also returns updates for bprop"""
         # return self.both_prop_compiled(xs, ys + [self.out_end])
-        return self.both_prop_compiled(xs, ys)
+        return self.both_prop_compiled(xs, ys, batch_size)
         
 
     def symbolic_generate(self, xs):
@@ -163,7 +163,7 @@ class GRUEncDec:
         # - no regularization
         # - not clear how to do momentum update
         # - will always update when called (but we can fix that)
-        tot_cost = self.both_prop(all_xs, all_ys) # also modifies updates
+        tot_cost = self.both_prop(all_xs, all_ys, batch_size=batch_size) # also modifies updates
         # cost_and_dparams = self.both_prop(all_xs, all_ys)
         # tot_cost = cost_and_dparams[0]
         # dparams = [dparam/float(batch_size) for dparam in cost_and_dparams[1:]]
