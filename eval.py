@@ -13,6 +13,11 @@ from naive_rnnlm_discr import NaiveRnnlmDiscr
 from baseline import BigramBaseline
 from misc import lengthen, get_data
 
+from gru_encdec import GRUEncDec
+
+
+import run_helpers # doesn't allow '-' signs
+import run_helpers2 # allows '-' signs
 
 # def bool_metric(correct, given):
 #     return int(correct == given)
@@ -40,6 +45,9 @@ def align_metric(correct, given):
 
     return score
     
+def strict_metric(correct, given):
+    return int(correct == given)
+
 def num_metric(correct, given):
     """Count raw distance away from the correct answer"""
     n_correct = int(correct)
@@ -66,44 +74,68 @@ def eval_model(predict_fn, xy_data, metric = align_metric):
 #         print 'nr at', rnns_file, 'not found'
 
 if __name__ == '__main__':
-    train_data = get_data('data/3dig_train.p')
-    dev_data = get_data('data/3dig_dev.p')
-    train_data_discr = get_data('data/neg_train.txt')
-    dev_data_discr = get_data('data/neg_dev.txt')
-    train_data_short = get_data('data/2dig_train.p')
-    dev_data_short = get_data('data/2dig_dev.p')
+    add_train = get_data('data/3dig_train.p')
+    add_dev = get_data('data/3dig_dev.p')
+    subtr_train = get_data('data/subtr_train.p')
+    subtr_dev = get_data('data/subtr_dev.p')
+
+    
+    gru_add = GRUEncDec(len(run_helpers.invocab), 50, 50, len(run_helpers.outvocab))
+    gru_add.load_model('models/gru_add_full.p')
+    gru_add_fn = lambda x: run_helpers.model_solve(gru_add, x)
+    print 'gru add train', eval_model(gru_add_fn, add_train)
+    print 'gru add dev', eval_model(gru_add_fn, add_dev)
+    print 'gru add train strict', eval_model(gru_add_fn, add_train, metric=strict_metric)
+    print 'gru add dev strict', eval_model(gru_add_fn, add_dev, metric=strict_metric)
+
+
+    gru_subtr = GRUEncDec(len(run_helpers2.invocab), 50, 50, len(run_helpers2.outvocab))
+    gru_subtr.load_model('models/gru_subtr_full.p')
+    gru_subtr_fn = lambda x: run_helpers2.model_solve(gru_subtr, x)
+    print 'gru subtr train', eval_model(gru_subtr_fn, subtr_train)
+    print 'gru subtr dev', eval_model(gru_subtr_fn, subtr_dev)
+    print 'gru subtr train strict', eval_model(gru_subtr_fn, subtr_train, metric=strict_metric)
+    print 'gru subtr dev strict', eval_model(gru_subtr_fn, subtr_dev, metric=strict_metric)
+
+
+    # train_data = get_data('data/3dig_train.p')
+    # dev_data = get_data('data/3dig_dev.p')
+    # train_data_discr = get_data('data/neg_train.txt')
+    # dev_data_discr = get_data('data/neg_dev.txt')
+    # train_data_short = get_data('data/2dig_train.p')
+    # dev_data_short = get_data('data/2dig_dev.p')
     
 
     
-    print 'Dev set scores'
-    ed = EncDec(12,10,10,10) # TODO: remove magic numbers
-    ed.load_model('models/ed_simple.p')
-    ed_fn = lambda x : ed_solve(ed, x)
-    print 'ed dev', eval_model(ed_fn, dev_data_short)
-    ed2 = EncDec(12,10,10,10)
-    ed2.load_model('models/ed_full.p')
-    ed2_fn = lambda x : ed_solve(ed2, x)
-    print 'ed2 dev', eval_model(ed2_fn, dev_data)
+    # print 'Dev set scores'
+    # ed = EncDec(12,10,10,10) # TODO: remove magic numbers
+    # ed.load_model('models/ed_simple.p')
+    # ed_fn = lambda x : ed_solve(ed, x)
+    # print 'ed dev', eval_model(ed_fn, dev_data_short)
+    # ed2 = EncDec(12,10,10,10)
+    # ed2.load_model('models/ed_full.p')
+    # ed2_fn = lambda x : ed_solve(ed2, x)
+    # print 'ed2 dev', eval_model(ed2_fn, dev_data)
     
     
 
-    # bigram baseline part
-    bb = BigramBaseline()
-    bb.learn(train_data)
-    #print 'bb dev', eval_model(bb.predict_one, dev_data)
+    # # bigram baseline part
+    # bb = BigramBaseline()
+    # bb.learn(train_data)
+    # #print 'bb dev', eval_model(bb.predict_one, dev_data)
     
-    # # naive rnn part
-    # nr_test('rnn_naive.txt', dev_data)
-    # nr_test('rnn_naive_oracle.txt', dev_data)
-    # nr_test('rnn_naive_oracle_bptt.txt', dev_data)
-    # nr_test('rnn_naive_rot.txt', dev_data)
-    # nr_test('rnn_naive_rot_bptt.txt', dev_data)
-    # nr_test('rnn_naive_discr.txt', dev_data_discr, True)
+    # # # naive rnn part
+    # # nr_test('rnn_naive.txt', dev_data)
+    # # nr_test('rnn_naive_oracle.txt', dev_data)
+    # # nr_test('rnn_naive_oracle_bptt.txt', dev_data)
+    # # nr_test('rnn_naive_rot.txt', dev_data)
+    # # nr_test('rnn_naive_rot_bptt.txt', dev_data)
+    # # nr_test('rnn_naive_discr.txt', dev_data_discr, True)
 
 
-    print 'Train set scores'
-    print 'ed train', eval_model(ed_fn, train_data_short)
-    print 'ed2 train', eval_model(ed2_fn, train_data) # 3-digit ed
+    # print 'Train set scores'
+    # print 'ed train', eval_model(ed_fn, train_data_short)
+    # print 'ed2 train', eval_model(ed2_fn, train_data) # 3-digit ed
 
     
     # # bigram baseline part
