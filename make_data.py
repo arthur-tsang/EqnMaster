@@ -60,16 +60,16 @@ def subtr_example():
 
 def simple_discr_example():
     # Come up with an (x,y) pair that doesn't match
-    generic_discr_example(simple_example)
+    return generic_discr_example(simple_example)
 
 def subtr_discr_example():
-    generic_discr_example(subtr_example)
+    return generic_discr_example(subtr_example)
 
 def mult_discr_example():
-    generic_discr_example(mult_example)
+    return generic_discr_example(mult_example)
 
 def comp_discr_example():
-    generic_discr_example(composition_example)
+    return generic_discr_example(composition_example)
 
 def generic_discr_example(example_generator):
     correct = np.random.random() < .5
@@ -165,4 +165,7 @@ if __name__ == '__main__':
     
     # print add_ndigs_example(5)
     #generate_ndig_examples()
-    generate_generic_examples('bigmult', mult_example, n_train=100000)
+    #generate_generic_examples('bigmult', mult_example, n_train=100000)
+    print mult_discr_example()
+
+    generate_discr_composition_examples()

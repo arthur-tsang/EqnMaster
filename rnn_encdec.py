@@ -5,7 +5,6 @@ from itertools import takewhile
 
 import theano.tensor as T
 from theano import function
-from theano.compile.function import function_dump
 
 from rnn_enc import RNNEnc
 from rnn_dec import RNNDec
