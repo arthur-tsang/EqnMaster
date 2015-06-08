@@ -204,14 +204,14 @@ class GRUEncDec:
                 self.save_model(filename)
                 print "Epoch", epoch
                 tot_cost = 0.0
-                for i in range(51):
+                for i in range(min(N,51)):
                     single_X = np.array(X_train[i]).reshape([-1, 1])
                     single_Y = np.array(Y_train[i]).reshape([-1, 1])
                     tot_cost += self.process_batch(single_X, single_Y, shouldUpdate = False)
                 print "Training Cost (estimate):", tot_cost/51.0
                 if X_dev is not None:
                     tot_cost = 0.0
-                    for i in range(52):
+                    for i in range(min(N,52)):
                         single_X = np.array(X_dev[i]).reshape([-1, 1])
                         single_Y = np.array(Y_dev[i]).reshape([-1, 1])
                         tot_cost += self.process_batch(single_X, single_Y, shouldUpdate = False)
@@ -270,7 +270,7 @@ if __name__ == '__main__':
     gru = GRUEncDec(12, 12, 12, 12)
     
     X_train = [[1,2,3], [4,5]]
-    Y_train = [[7,7,7], [2,3]]
+    Y_train = [[7,7,7,12], [2,3,12]]
     gru.sgd(5, 200, X_train, Y_train)
 
     answer = gru.generate_answer([1,2,3])
