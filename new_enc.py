@@ -30,13 +30,15 @@ class NewEnc:
         ## Theano stuff
 
         # Params as theano.shared matrices
+        # W for x, V for Lxm, U for h (small), S for h (big), R for hm, 
         self.L = shared(random_weight_matrix(wdim, vdim), name='L')
-        self.Wx = shared(random_weight_matrix(hdim, wdim), name='Wx')
-        self.Wxm = shared(random_weight_matrix(hdim, hdim), name='Wxm')
-        self.Wh = shared(random_weight_matrix(hdim, wdim), name='Wh')
-        self.Whm = shared(random_weight_matrix(hdim, wdim), name='Whm')
+        self.W = shared(random_weight_matrix(hdim, wdim), name='W')
+        self.V = shared(random_weight_matrix(hdim, wdim), name='V')
+        self.U = shared(random_weight_matrix(hdim, hdim), name='U')
+        self.S = shared(random_weight_matrix(hdim, hdim), name='S')
+        self.R = shared(random_weight_matrix(hdim, hdim), name='R')
 
-        self.params = [self.L, self.Wx, self.Wxm, self.Wh, self.Whm]
+        self.params = [self.L, self.W, self.V, self.U, self.S, self.R]
         self.vparams = [0.0*param.get_value() for param in self.params]
 
         # # Compile stuff
@@ -51,7 +53,7 @@ class NewEnc:
     def rnn_timestep(self, x_t, h_prev, Lxm_t):
         # So simple!
         Lx_t = self.L[:,x_t]
-        h_t = T.tanh(T.dot(self.Wx, Lx_t) + T.dot(self.Wxm, Lxm_t) + T.dot(self.Wh, h_prev))
+        h_t = T.tanh(T.dot(self.W, Lx_t) + T.dot(self.V, Lxm_t) + T.dot(self.U, h_prev))
         return h_t
         
     def meta_rnn_timestep(self, xm_t, h_meta_prev, num_examples, xs):
@@ -66,7 +68,7 @@ class NewEnc:
                                 non_sequences = Lxm_t)
         h_t = results[-1]
 
-        h_meta_t = T.tanh(T.dot(self.Whm, h_t))
+        h_meta_t = T.tanh(T.dot(self.S, h_t) + T.dot(self.R, h_meta_prev))
         return h_meta_t
 
 

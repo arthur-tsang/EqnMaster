@@ -6,7 +6,7 @@ import sys
 from gru_encdec import GRUEncDec
 #from visualize_vecs import svd_visualize, tsne_visualize, pca_visualize
 
-from run_helpers import decode, model_solve, preprocess_data, outvocab, invocab
+from run_helpers2 import decode, model_solve, preprocess_data, outvocab, invocab
 
 if __name__ == '__main__':
 
