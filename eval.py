@@ -15,6 +15,8 @@ from misc import lengthen, get_data
 
 from gru_encdec import GRUEncDec
 
+from d_rnn import DRNN
+from d_gru import DGRU
 
 import run_helpers # doesn't allow '-' signs
 import run_helpers2 # allows '-' signs
@@ -88,28 +90,65 @@ if __name__ == '__main__':
     add7_train = get_data('data/7dig_train.p')
     add7_dev = get_data('data/7dig_dev.p')
 
+
+    # TESTING GRUs
     
-    gru_add = GRUEncDec(len(run_helpers.invocab), 50, 50, len(run_helpers.outvocab))
-    gru_add.load_model('models/gru_add_full.p')
-    gru_add_fn = lambda x: run_helpers.model_solve(gru_add, x)
-    print 'gru add train', eval_model(gru_add_fn, add_train)
-    print 'gru add dev', eval_model(gru_add_fn, add_dev)
-    print 'gru add train strict', eval_model(gru_add_fn, add_train, metric=strict_metric)
-    print 'gru add dev strict', eval_model(gru_add_fn, add_dev, metric=strict_metric)
+    # gru_add = GRUEncDec(len(run_helpers.invocab), 50, 50, len(run_helpers.outvocab))
+    # gru_add.load_model('models/gru_add_full.p')
+    # gru_add_fn = lambda x: run_helpers.model_solve(gru_add, x)
+    # print 'gru add train', eval_model(gru_add_fn, add_train)
+    # print 'gru add dev', eval_model(gru_add_fn, add_dev)
+    # print 'gru add train strict', eval_model(gru_add_fn, add_train, metric=strict_metric)
+    # print 'gru add dev strict', eval_model(gru_add_fn, add_dev, metric=strict_metric)
 
-    print 'gru add4 dev', eval_model(gru_add_fn, add4_dev)
-    print 'gru add5 dev', eval_model(gru_add_fn, add5_dev)
-    print 'gru add6 dev', eval_model(gru_add_fn, add6_dev)
-    print 'gru add7 dev', eval_model(gru_add_fn, add7_dev)
+    # print 'gru add4 dev', eval_model(gru_add_fn, add4_dev)
+    # print 'gru add5 dev', eval_model(gru_add_fn, add5_dev)
+    # print 'gru add6 dev', eval_model(gru_add_fn, add6_dev)
+    # print 'gru add7 dev', eval_model(gru_add_fn, add7_dev)
 
 
-    gru_subtr = GRUEncDec(len(run_helpers2.invocab), 50, 50, len(run_helpers2.outvocab))
-    gru_subtr.load_model('models/gru_subtr_full.p')
-    gru_subtr_fn = lambda x: run_helpers2.model_solve(gru_subtr, x)
-    print 'gru subtr train', eval_model(gru_subtr_fn, subtr_train)
-    print 'gru subtr dev', eval_model(gru_subtr_fn, subtr_dev)
-    print 'gru subtr train strict', eval_model(gru_subtr_fn, subtr_train, metric=strict_metric)
-    print 'gru subtr dev strict', eval_model(gru_subtr_fn, subtr_dev, metric=strict_metric)
+    # gru_subtr = GRUEncDec(len(run_helpers2.invocab), 50, 50, len(run_helpers2.outvocab))
+    # gru_subtr.load_model('models/gru_subtr_full.p')
+    # gru_subtr_fn = lambda x: run_helpers2.model_solve(gru_subtr, x)
+    # print 'gru subtr train', eval_model(gru_subtr_fn, subtr_train)
+    # print 'gru subtr dev', eval_model(gru_subtr_fn, subtr_dev)
+    # print 'gru subtr train strict', eval_model(gru_subtr_fn, subtr_train, metric=strict_metric)
+    # print 'gru subtr dev strict', eval_model(gru_subtr_fn, subtr_dev, metric=strict_metric)
+
+
+    discr_add_train = get_data('data/d_add_train.p')
+    discr_add_dev = get_data('data/d_add_dev.p')
+    discr_subtr_train = get_data('data/d_subtr_train.p')
+    discr_subtr_dev = get_data('data/d_subtr_dev.p')
+    discr_mult_train = get_data('data/d_mult_train.p')
+    discr_mult_dev = get_data('data/d_mult_dev.p')
+
+    
+
+
+    # TESTING discriminative stuff
+
+    # drnn_mult = DRNN(len(run_helpers2.invocab), 50, 50, len(run_helpers2.outvocab))
+    # drnn_mult.load_model('models/drnn_mult_full.p')
+    # drnn_mult_fn = lambda x: run_helpers2.model_solve_discr(drnn_mult, x)
+    # print 'drnn mult train', eval_model(drnn_mult_fn, discr_mult_train, metric=strict_metric)
+    # print 'drnn mult dev', eval_model(drnn_mult_fn, discr_mult_dev, metric=strict_metric)
+
+    dgru_mult = DGRU(len(run_helpers2.invocab), 50, 50, len(run_helpers2.outvocab))
+    dgru_mult.load_model('models/dgru_mult_full.p')
+    dgru_mult_fn = lambda x: run_helpers2.model_solve_discr(dgru_mult, x)
+    print 'dgru mult train', eval_model(dgru_mult_fn, discr_mult_train, metric=stric_metric)
+    print 'dgru mult dev', eval_model(dgru_mult_fn, discr_mult_dev, metric=stric_metric)
+
+
+
+
+
+
+
+
+
+
 
 
     # train_data = get_data('data/3dig_train.p')

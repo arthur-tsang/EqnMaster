@@ -165,7 +165,7 @@ if __name__ == '__main__':
     
     # print add_ndigs_example(5)
     #generate_ndig_examples()
-    #generate_generic_examples('bigmult', mult_example, n_train=100000)
-    print mult_discr_example()
+    generate_generic_examples('bigmult', mult_example, n_train=100000)
+    # print mult_discr_example()
 
     generate_discr_composition_examples()

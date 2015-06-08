@@ -18,8 +18,8 @@ indico = {c:i for i,c in enumerate(invocab)}
 indico2 = {c:i for i,c in enumerate(invocab2)}
 
 
-def encode(nr_string, dico=indico, asNumpy = True):
-    # using indico as default, because that's more general
+def encode(nr_string, dico=indico2, asNumpy = True):
+    # using indico2 as default, because that's more general
     list_encoding = [dico[c] for c in nr_string]
     return np.array(list_encoding) if asNumpy else list_encoding
 
@@ -35,7 +35,10 @@ def labelize(xy_data, asNumpy = True):
     return (X,Y)
 
 def model_solve(model, in_string):
-    return decode(model.generate_answer(encode(in_string, indico)), outvocab)
+    return decode(model.generate_answer(encode(in_string, indico2)), outvocab)
+
+def model_solve_discr(model, in_string):
+    return model.generate_answer(encode(in_string, indico2))
 
 def preprocess_data(train_file, asNumpy = True):
     """filename should be models/<whatever>.p

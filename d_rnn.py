@@ -44,6 +44,7 @@ class DRNN:
         self.vparams = [0.0*param.get_value() for param in self.params]
 
         self.prop_compiled = self.compile_self()
+        self.generate_compiled = self.compile_generate()
 
     def reset_grads(self):
         """Resets all grads to zero (maintaining shape!)"""
@@ -123,17 +124,15 @@ class DRNN:
                                 sequences=xs)
 
 
-        return results[0]
+        return results[0][-1]
 
     def compile_generate(self):
         xs = T.ivector('xs')
         return function([xs], self.symbolic_output(xs), allow_input_downcast=True)
 
     def generate_answer(self, xs):
-        f = self.compile_generate()
         xs = np.array(xs)
-        # xs = xs.reshape([-1, 1])
-        ys = f(xs)
+        ys = self.generate_compiled(xs)
         return ys
 
     def update_params(self, new_dparams, update_rule):
