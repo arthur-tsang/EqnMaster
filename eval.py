@@ -79,6 +79,15 @@ if __name__ == '__main__':
     subtr_train = get_data('data/subtr_train.p')
     subtr_dev = get_data('data/subtr_dev.p')
 
+    add4_train = get_data('data/4dig_train.p')
+    add4_dev = get_data('data/4dig_dev.p')
+    add5_train = get_data('data/5dig_train.p')
+    add5_dev = get_data('data/5dig_dev.p')
+    add6_train = get_data('data/6dig_train.p')
+    add6_dev = get_data('data/6dig_dev.p')
+    add7_train = get_data('data/7dig_train.p')
+    add7_dev = get_data('data/7dig_dev.p')
+
     
     gru_add = GRUEncDec(len(run_helpers.invocab), 50, 50, len(run_helpers.outvocab))
     gru_add.load_model('models/gru_add_full.p')
@@ -87,6 +96,11 @@ if __name__ == '__main__':
     print 'gru add dev', eval_model(gru_add_fn, add_dev)
     print 'gru add train strict', eval_model(gru_add_fn, add_train, metric=strict_metric)
     print 'gru add dev strict', eval_model(gru_add_fn, add_dev, metric=strict_metric)
+
+    print 'gru add4 dev', eval_model(gru_add_fn, add4_dev)
+    print 'gru add5 dev', eval_model(gru_add_fn, add5_dev)
+    print 'gru add6 dev', eval_model(gru_add_fn, add6_dev)
+    print 'gru add7 dev', eval_model(gru_add_fn, add7_dev)
 
 
     gru_subtr = GRUEncDec(len(run_helpers2.invocab), 50, 50, len(run_helpers2.outvocab))

@@ -1,6 +1,7 @@
 import numpy as np
 import pickle
 import os.path
+from itertools import takewhile
 
 import theano.tensor as T
 from theano import function
@@ -86,9 +87,10 @@ class NewEncDec:
     def generate_answer(self, xs):
         xs = np.array(xs)
         xs = xs.reshape([-1, 1])
-        ys = (self.generate_function(xs)).reshape([-1]).tolist()
+        ys_full = (self.generate_function(xs)).reshape([-1]).tolist()
+        # I'm lazy and letting theano compute the whole thing, then I take from it
+        ys = list(takewhile(lambda x: x != self.out_end, ys_full))
         return ys
-
 
     def update_params(self, dec_enc_new_dparams, update_rule):
         """Updates params of both decoder and encoder according to deltas given"""

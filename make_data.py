@@ -25,6 +25,16 @@ def composition_example():
 
     return (in_str, out_str)
 
+def add_ndigs_example(ndigs):
+    # addition of exactly n digits by n digits
+    assert(ndigs > 0)
+    def num_gen():
+        return str(np.random.randint(9) + 1) + ''.join(str(np.random.randint(10)) for _ in range(ndigs-1))
+    full_string = num_gen() + '+' + num_gen()
+    assert(len(full_string) == 2 * ndigs + 1)
+    return (full_string, str(eval(full_string)))
+
+
 def simple_example():
     first = np.random.randint(1000)
     second = np.random.randint(1000)
@@ -328,6 +338,32 @@ def generate_discr_composition_examples():
 
     print 'generated discriminative composition examples'
     
+def generate_generic_examples(file_short, example_generator, n_train=10000, n_dev=2000, n_test=2000):
+    train_file = 'data/' + file_short + '_train.p'
+    dev_file = 'data/' + file_short + '_dev.p'
+    test_file = 'data/' + file_short + '_test.p'
+
+    n_tot = n_train + n_dev + n_test
+
+    all_examples = set()
+    while len(all_examples) < n_tot:
+        if len(all_examples) % 10000 == 0:
+            print 'len', len(all_examples)
+        all_examples.add(example_generator())
+
+    example_list = list(all_examples)
+    train_dat = example_list[:n_train]
+    dev_dat = example_list[n_train:n_train + n_dev]
+    test_dat = example_list[n_train + n_dev:]
+
+    #triple_pickle(['data/comp_train_short.p'],[train_dat[:10000]])
+    triple_pickle((train_file, dev_file, test_file), (train_dat, dev_dat, test_dat))
+
+def generate_ndig_examples():
+    generate_generic_examples('4dig', lambda: add_ndigs_example(4))
+    generate_generic_examples('5dig', lambda: add_ndigs_example(5))
+    generate_generic_examples('6dig', lambda: add_ndigs_example(6))
+    generate_generic_examples('7dig', lambda: add_ndigs_example(7))
 
 if __name__ == '__main__':
     # generate_examples()
@@ -338,6 +374,8 @@ if __name__ == '__main__':
     # generate_subtr_discr_examples()
     # generate_mult_discr_examples()
     # generate_composition_examples()
-    generate_discr_composition_examples()
+    # generate_discr_composition_examples()
     #print composition_example()
     
+    # print add_ndigs_example(5)
+    generate_ndig_examples()
