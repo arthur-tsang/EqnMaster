@@ -74,7 +74,7 @@ if __name__ == '__main__':
     #dgru.save_model(model_filename)
 
     # ## LSTMEncDec model test
-    toy_problems = [decode(x, invocab2) for x in X_train]
+    toy_problems = [decode(x, invocab2) for x in X_train[:50]]
     
     # L = led.encoder.params['L']
     # #svd_visualize(np.transpose(L), invocab, outfile = 'figs/svd_lstm.jpg')
