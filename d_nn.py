@@ -37,10 +37,13 @@ class DNN:
         # W: times character-vector, U: times previous-hidden-vector
         #self.Wx = shared(random_weight_matrix(hdim, wdim), name='Wx')
         #self.Wh = shared(random_weight_matrix(wdim, wdim), name='Wh')
-        self.U = shared(random_weight_matrix(outdim, wdim), name='U')
-        self.b  = shared(np.zeros([outdim, 1]), name='b', broadcastable=(False, True))
+        self.U = shared(random_weight_matrix(hdim, wdim), name='U')
+        self.b  = shared(np.zeros([hdim, 1]), name='b', broadcastable=(False, True))
+        self.U2 = shared(random_weight_matrix(outdim, hdim), name='U2') # for the second layer
+        self.b2  = shared(np.zeros([outdim, 1]), name='b2', broadcastable=(False, True))
 
-        self.params = [self.L, self.U, self.b]
+
+        self.params = [self.L, self.U, self.b, self.U2, self.b2]
         self.vparams = [0.0*param.get_value() for param in self.params]
 
         self.prop_compiled = self.compile_self()
@@ -58,7 +61,8 @@ class DNN:
         # gates (update, reset)
         # h_t = T.tanh(T.dot(self.Wx, Lx_t) + T.dot(self.Wh, h_prev))
         h_t = h_prev + Lx_t # just a stupid linear combination
-        y_hat_t = softmax((T.dot(self.U, h_t) + self.b).T).T
+        first_layer = T.tanh(T.dot(self.U, h_t) + self.b)
+        y_hat_t = softmax((T.dot(self.U2, first_layer) + self.b2).T).T
         cost = T.sum(-T.log(y_hat_t[ys, T.arange(ys.shape[0])]))
         return cost, h_t
 
@@ -107,14 +111,19 @@ class DNN:
         return self.prop_compiled(xs, ys)
 
 
-    def drnn_output(self, x_t, old_label, h_prev):
+    def dnn_output(self, x_t, old_label, h_prev):
 
         Lx_t = self.L[:,x_t]
         h_t = Lx_t + h_prev
         #h_t = T.tanh(T.dot(self.Wx, Lx_t) + T.dot(self.Wh, h_prev))
         print h_t.type
-        y_hat_t = softmax(T.dot(self.U, h_t) + self.b)[0]
-        out_label = T.argmax(y_hat_t)
+        first_layer = T.tanh(T.dot(self.U, h_t) + self.b.reshape([-1]))
+        y_hat_t = softmax((T.dot(self.U2, first_layer) + self.b2.reshape([-1])).T).T
+        #y_hat_t = softmax(T.dot(self.U, h_t) + self.b)[0]
+
+
+        out_label = T.argmax(y_hat_t) # good line
+        #out_label = first_layer.shape[1] # bad line
 
         return out_label, h_t
 
@@ -122,7 +131,7 @@ class DNN:
     def symbolic_output(self, xs):
         """generate ys from a given h_prev"""
         h_prev = T.zeros(self.wdim, dtype='float64')
-        results, updates = scan(fn = self.drnn_output, 
+        results, updates = scan(fn = self.dnn_output, 
                                 outputs_info = [np.int64(0), h_prev],
                                 sequences=xs)
 
