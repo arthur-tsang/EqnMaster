@@ -15,7 +15,8 @@ class DNN:
         
         # Dimensions
         self.vdim = vdim
-        self.hdim = hdim
+        assert(wdim == hdim) # so it follows the forn of everything else
+        #self.hdim = hdim 
         self.wdim = wdim
         self.outdim = outdim
 
@@ -34,12 +35,12 @@ class DNN:
         # Params as theano.shared matrices
         self.L = shared(random_weight_matrix(wdim, vdim), name='L')
         # W: times character-vector, U: times previous-hidden-vector
-        self.Wx = shared(random_weight_matrix(hdim, wdim), name='Wx')
+        #self.Wx = shared(random_weight_matrix(hdim, wdim), name='Wx')
         #self.Wh = shared(random_weight_matrix(wdim, wdim), name='Wh')
-        self.U = shared(random_weight_matrix(outdim, hdim), name='U')
+        self.U = shared(random_weight_matrix(outdim, wdim), name='U')
         self.b  = shared(np.zeros([outdim, 1]), name='b', broadcastable=(False, True))
 
-        self.params = [self.L, self.Wx, self.U, self.b]
+        self.params = [self.L, self.U, self.b]
         self.vparams = [0.0*param.get_value() for param in self.params]
 
         self.prop_compiled = self.compile_self()
@@ -52,10 +53,11 @@ class DNN:
 
     def dnn_timestep(self, x_t, old_cost, h_prev, ys):
         """Basically, part of a summation of Lx's"""
+        # h_prev is of size wdim
         Lx_t = self.L[:,x_t]
         # gates (update, reset)
         # h_t = T.tanh(T.dot(self.Wx, Lx_t) + T.dot(self.Wh, h_prev))
-        h_t = h_prev + T.dot(self.Wx, Lx_t) # just a stupid linear combination
+        h_t = h_prev + Lx_t # just a stupid linear combination
         y_hat_t = softmax((T.dot(self.U, h_t) + self.b).T).T
         cost = T.sum(-T.log(y_hat_t[ys, T.arange(ys.shape[0])]))
         return cost, h_t
@@ -69,7 +71,7 @@ class DNN:
     def symbolic_f_prop(self, xs, ys):
         """returns symbolic variable based on ch_prev and xs."""
         num_examples = xs.shape[1]
-        h_prev = T.zeros([self.hdim, num_examples], dtype='float64')
+        h_prev = T.zeros([self.wdim, num_examples], dtype='float64')
         results, updates = scan(fn = self.dnn_timestep, 
                                 outputs_info = [np.float64(0), h_prev],
                                 sequences = xs,
@@ -108,7 +110,7 @@ class DNN:
     def drnn_output(self, x_t, old_label, h_prev):
 
         Lx_t = self.L[:,x_t]
-        h_t = T.dot(self.Wx, Lx_t) + h_prev
+        h_t = Lx_t + h_prev
         #h_t = T.tanh(T.dot(self.Wx, Lx_t) + T.dot(self.Wh, h_prev))
         print h_t.type
         y_hat_t = softmax(T.dot(self.U, h_t) + self.b)[0]
@@ -119,7 +121,7 @@ class DNN:
 
     def symbolic_output(self, xs):
         """generate ys from a given h_prev"""
-        h_prev = T.zeros(self.hdim, dtype='float64')
+        h_prev = T.zeros(self.wdim, dtype='float64')
         results, updates = scan(fn = self.drnn_output, 
                                 outputs_info = [np.int64(0), h_prev],
                                 sequences=xs)
@@ -269,11 +271,12 @@ class DNN:
 
 if __name__ == '__main__':
     dnn= DNN(12,12,12)
-    X_train = [[1,2,3], [4,5]]
-    Y_train = [1, 0]
+    X_train = [[1,2,3], [4,5], [1,2,4]]
+    Y_train = [1, 0, 0]
     dnn.sgd(5, 1000, X_train, Y_train)
     print dnn.generate_answer([1,2,3])
     print dnn.generate_answer([4,5])
+    print dnn.generate_answer([1,2,4])
     # print 'Sanity check'
     # gru = GRUEnc(15,15,15)
     # xs = [1,2,3]
