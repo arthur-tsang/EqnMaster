@@ -66,30 +66,32 @@ class GRUEncDec:
         new_dparams = self.symbolic_b_prop(cost)
 
         # # updates stuff
-        # params = self.decoder.params + self.encoder.params # python lists
-        # # assuming sgd for now (for simplicity's sake)
-        # updates = {param:(param - self.alpha * dparam) for param, dparam in zip(params, new_dparams)}
-
-        return function([xs, ys], [cost] + new_dparams, allow_input_downcast=True)
-
-    def symbolic_update(self, dparams):
-        # assuming sgd for now
+        batch_size = T.iscalar('batch_size')
+        dparams = 1. * new_dparams / batch_size
         params = self.decoder.params + self.encoder.params # python lists
-        updates_list = [(param, param - self.alpha * dparam) for param, dparam in zip(params, dparams)]
-        updates_dict = OrderedDict(updates_list) # guarantee deterministic order
+        # # assuming sgd for now (for simplicity's sake)
+        updates = {param:(param - self.alpha * dparam) for param, dparam in zip(params, dparams)}
 
-        # print 'updates_dict', updates_dict
+        return function([xs, ys, batch_size], cost, allow_input_downcast=True, updates=updates)
 
-        return updates_dict
+    # def symbolic_update(self, dparams):
+    #     # assuming sgd for now
+    #     params = self.decoder.params + self.encoder.params # python lists
+    #     updates_list = [(param, param - self.alpha * dparam) for param, dparam in zip(params, dparams)]
+    #     updates_dict = OrderedDict(updates_list) # guarantee deterministic order
 
-    def compile_update(self):
-        params = self.decoder.params + self.encoder.params
-        dparams = [T.TensorVariable(param.type) for param in params]
+    #     # print 'updates_dict', updates_dict
 
-        def unwrapper(dparams_numeric):
-            function(dparams, updates=self.symbolic_update(dparams))(*dparams_numeric)
+    #     return updates_dict
 
-        return unwrapper
+    # def compile_update(self):
+    #     params = self.decoder.params + self.encoder.params
+    #     dparams = [T.TensorVariable(param.type) for param in params]
+
+    #     def unwrapper(dparams_numeric):
+    #         function(dparams, updates=self.symbolic_update(dparams))(*dparams_numeric)
+
+    #     return unwrapper
 
 
     def both_prop(self, xs, ys):
@@ -156,9 +158,15 @@ class GRUEncDec:
         # tot_cost = 0.0
         batch_size = all_xs.shape[1]
         # for xs, ys in zip(all_xs, all_ys):
-        cost_and_dparams = self.both_prop(all_xs, all_ys)
-        tot_cost = cost_and_dparams[0]
-        dparams = [dparam/float(batch_size) for dparam in cost_and_dparams[1:]]
+        
+        # TODO: the following is wrong because
+        # - no regularization
+        # - not clear how to do momentum update
+        # - will always update when called (but we can fix that)
+        tot_cost = self.both_prop(all_xs, all_ys) # also modifies updates
+        # cost_and_dparams = self.both_prop(all_xs, all_ys)
+        # tot_cost = cost_and_dparams[0]
+        # dparams = [dparam/float(batch_size) for dparam in cost_and_dparams[1:]]
         
         # all_dparams.append(dparams)
         # tot_cost += cost
@@ -170,11 +178,11 @@ class GRUEncDec:
         e_reg_updates, e_reg_cost = self.encoder.reg_updates_cost()
         d_reg_updates, d_reg_cost = self.decoder.reg_updates_cost()
 
-        dparams_tot = [(avg + reg) for (avg, reg) in zip(dparams, d_reg_updates + e_reg_updates)]
+        #dparams_tot = [(avg + reg) for (avg, reg) in zip(dparams, d_reg_updates + e_reg_updates)]
 
-        if shouldUpdate:
-            #print 'dparams_tot', dparams_tot
-            self.update_compiled(dparams_tot)
+        # if shouldUpdate:
+        #     #print 'dparams_tot', dparams_tot
+        #     self.update_compiled(dparams_tot)
 
         # if shouldUpdate:
         #     self.update_params(dparams_tot, update_rule)
