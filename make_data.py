@@ -6,11 +6,11 @@ import numpy as np
 
 # TODO: sort the functions in a way that makes sense
 
-def composition_example():
+def composition_example(operators=['+', '-', '*']):
     def randnr():
         return str(np.random.randint(1000))
     def randop():
-        return np.random.choice(['+','-','*'])
+        return np.random.choice(operators)
 
     a = randnr()
     b = randnr()
@@ -25,12 +25,16 @@ def composition_example():
 
     return (in_str, out_str)
 
-def add_ndigs_example(ndigs):
+def simpcomp_example():
+    return composition_example(['+','-'])
+
+def add_ndigs_example(ndigs, operator='+'):
     # addition of exactly n digits by n digits
     assert(ndigs > 0)
+    assert(type(operator) == type('+'))
     def num_gen():
         return str(np.random.randint(9) + 1) + ''.join(str(np.random.randint(10)) for _ in range(ndigs-1))
-    full_string = num_gen() + '+' + num_gen()
+    full_string = num_gen() + operator + num_gen()
     assert(len(full_string) == 2 * ndigs + 1)
     return (full_string, str(eval(full_string)))
 
@@ -116,6 +120,10 @@ def triple_pickle(filenames, datasets):
             pickle.dump(dat, f)
     
 
+def generate_simpcomp_examples():
+    generate_generic_examples('simpcomp', simpcomp_example)
+    print 'generated simpcomp (comp with only + and -) examples'
+
 def generate_composition_examples():
     generate_generic_examples('comp', composition_example, n_train = 500000)
     print 'generated composition examples'
@@ -151,6 +159,12 @@ def generate_ndig_examples():
     generate_generic_examples('6dig', lambda: add_ndigs_example(6))
     generate_generic_examples('7dig', lambda: add_ndigs_example(7))
 
+def generate_ndig_subtr_examples():
+    generate_generic_examples('4subtr', lambda: add_ndigs_example(4, operator='-'))
+    generate_generic_examples('5subtr', lambda: add_ndigs_example(5, operator='-'))
+    generate_generic_examples('6subtr', lambda: add_ndigs_example(6, operator='-'))
+    generate_generic_examples('7subtr', lambda: add_ndigs_example(7, operator='-'))
+
 if __name__ == '__main__':
     # generate_examples()
     # generate_discr_examples()
@@ -165,7 +179,10 @@ if __name__ == '__main__':
     
     # print add_ndigs_example(5)
     #generate_ndig_examples()
-    generate_generic_examples('bigmult', mult_example, n_train=100000)
-    # print mult_discr_example()
+    # generate_generic_examples('bigmult', mult_example, n_train=100000)
+    # # print mult_discr_example()
 
-    generate_discr_composition_examples()
+    # generate_discr_composition_examples()
+
+    # generate_ndig_subtr_examples()
+    generate_simpcomp_examples()
