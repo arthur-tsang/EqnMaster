@@ -56,39 +56,28 @@ def subtr_example():
 
 def simple_discr_example():
     # Come up with an (x,y) pair that doesn't match
-    correct = np.random.random() < .5
-
-    if correct:
-        x,y = simple_example()
-        return (x+' = '+y, 1)
-    else:
-        x, y1 = simple_example()
-        y2 = simple_example()[1]
-        return (x+' = '+y2, int(y1 == y2))
+    generic_discr_example(simple_example)
 
 def subtr_discr_example():
-    correct = np.random.random() < .5
-
-    if correct:
-        x,y = subtr_example()
-        return (x+' = '+y, 1)
-    else:
-        x, y1 = subtr_example()
-        y2 = subtr_example()[1]
-        return (x+' = '+y2, int(y1 == y2))
-
+    generic_discr_example(subtr_example)
 
 def mult_discr_example():
-    # Come up with an (x,y) pair that doesn't match
+    generic_discr_example(mult_example)
+
+def comp_discr_example():
+    generic_discr_example(composition_example)
+
+def generic_discr_example(example_generator):
     correct = np.random.random() < .5
 
     if correct:
-        x,y = mult_example()
+        x,y = example_generator()
         return (x+'='+y, 1)
     else:
-        x, y1 = mult_example()
-        y2 = mult_example()[1]
+        x, y1 = example_generator()
+        y2 = example_generator()[1]
         return (x+'='+y2, int(y1 == y2))
+    
 
 
 def generate_examples():
@@ -313,6 +302,31 @@ def generate_composition_examples():
 
     print 'generated composition examples'
     
+def generate_discr_composition_examples():
+    n_train = 10000
+    n_dev = 2000
+    n_test = 2000
+    
+    train_file = 'data/d_comp_train.p'
+    dev_file = 'data/d_comp_data.p'
+    test_file = 'data/d_comp_test.p'
+
+    n_tot = n_train + n_dev + n_test
+    all_examples = set()
+    while len(all_examples) < n_tot:
+        if len(all_examples) % 10000 == 0:
+            print 'len', len(all_examples)
+        all_examples.add(composition_example())
+
+    example_list = list(all_examples)
+    train_dat = example_list[:n_train]
+    dev_dat = example_list[n_train:n_train + n_dev]
+    test_dat = example_list[n_train + n_dev:]
+
+    #triple_pickle(['data/comp_train_short.p'],[train_dat[:10000]])
+    triple_pickle((train_file, dev_file, test_file), (train_dat, dev_dat, test_dat))
+
+    print 'generated discriminative composition examples'
     
 
 if __name__ == '__main__':
@@ -323,6 +337,7 @@ if __name__ == '__main__':
     # generate_subtr_examples()
     # generate_subtr_discr_examples()
     # generate_mult_discr_examples()
-    generate_composition_examples()
+    # generate_composition_examples()
+    generate_discr_composition_examples()
     #print composition_example()
     
