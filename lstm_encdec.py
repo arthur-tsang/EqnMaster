@@ -5,7 +5,6 @@ from itertools import takewhile
 
 import theano.tensor as T
 from theano import function
-from theano.compile.function import function_dump
 
 from lstm_enc import LSTMEnc
 from lstm_dec import LSTMDec

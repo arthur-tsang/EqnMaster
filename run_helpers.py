@@ -2,7 +2,6 @@
 
 import numpy as np
 
-from lstm_encdec import LSTMEncDec
 from misc import get_data
 
 # Keep track of vocab as a string of certain characters
