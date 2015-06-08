@@ -1,6 +1,7 @@
 import numpy as np
 import pickle
 import os.path
+from itertools import takewhile
 
 import theano.tensor as T
 from theano import function
@@ -87,7 +88,9 @@ class GRUEncDec:
     def generate_answer(self, xs):
         xs = np.array(xs)
         xs = xs.reshape([-1, 1])
-        ys = (self.generate_function(xs)).reshape([-1]).tolist()
+        ys_full = (self.generate_function(xs)).reshape([-1]).tolist()
+        # I'm lazy and letting theano compute the whole thing, then I take from it
+        ys = list(takewhile(lambda x: x != self.out_end, ys_full))
         return ys
 
 
@@ -270,11 +273,11 @@ if __name__ == '__main__':
     gru = GRUEncDec(12, 12, 12, 12)
     
     X_train = [[1,2,3], [4,5]]
-    Y_train = [[7,7,7,12], [2,3,12]]
-    gru.sgd(5, 200, X_train, Y_train)
+    Y_train = [[7,7,7], [2,3]]
+    gru.sgd(5, 3000, X_train, Y_train)
 
     answer = gru.generate_answer([1,2,3])
-    # print 'answer:', answer
+    print 'answer:', answer
     
     # lstm = LSTMEncDec(12,12,12,12)
 
