@@ -9,7 +9,7 @@ import signal
 
 rng = np.random
 
-class DRNN:
+class DGRU:
 
     def __init__(self, vdim, hdim, wdim, outdim=2, alpha=.005, rho=.0001, mu=0.75, rseed=10):
         
@@ -31,16 +31,19 @@ class DRNN:
 
         ## Theano stuff
 
-        # Params as theano.shared matrices
         self.L = shared(random_weight_matrix(wdim, vdim), name='L')
         # W: times character-vector, U: times previous-hidden-vector
         # z: update, r: reset, h: new memory content (my notation)
-        self.Wx = shared(random_weight_matrix(hdim, wdim), name='Wx')
-        self.Wh = shared(random_weight_matrix(wdim, wdim), name='Wh')
-        self.U = shared(random_weight_matrix(outdim, hdim), name='U')
+        self.Wz = shared(random_weight_matrix(hdim, wdim), name='Wz')
+        self.Uz = shared(random_weight_matrix(hdim, hdim), name='Uz')
+        self.Wr = shared(random_weight_matrix(hdim, wdim), name='Wr')
+        self.Ur = shared(random_weight_matrix(hdim, hdim), name='Ur')
+        self.Wh = shared(random_weight_matrix(hdim, wdim), name='Wh')
+        self.Uh = shared(random_weight_matrix(hdim, hdim), name='Uh')
+        self.U  = shared(random_weight_matrix(outdim, hdim), name='U')
         self.b  = shared(np.zeros([outdim, 1]), name='b', broadcastable=(False, True))
 
-        self.params = [self.L, self.Wx, self.Wh, self.U, self.b]
+        self.params = [self.L, self.Wz, self.Uz, self.Wr, self.Ur, self.Wh, self.Uh, self.U, self.b]
         self.vparams = [0.0*param.get_value() for param in self.params]
 
         self.prop_compiled = self.compile_self()
@@ -50,13 +53,20 @@ class DRNN:
         for dparam in self.dparams:
             dparam.set_value(0 * dparam.get_value())
 
-    def drnn_timestep(self, x_t, old_cost, h_prev, ys):
+    def dgru_timestep(self, x_t, old_cost, h_prev, ys):
 
         Lx_t = self.L[:,x_t]
         # gates (update, reset)
-        h_t = T.tanh(T.dot(self.Wx, Lx_t) + T.dot(self.Wh, h_prev))
+        z_t = sigmoid(T.dot(self.Wz, Lx_t) + T.dot(self.Uz, h_prev))
+        r_t = sigmoid(T.dot(self.Wr, Lx_t) + T.dot(self.Ur, h_prev))
+        # combine them
+        h_new_t = T.tanh(T.dot(self.Wh, Lx_t) + r_t * T.dot(self.Uh, h_prev))
+        h_t = z_t * h_prev + (1 - z_t) * h_new_t
         y_hat_t = softmax((T.dot(self.U, h_t) + self.b).T).T
         cost = T.sum(-T.log(y_hat_t[ys, T.arange(ys.shape[0])]))
+        # We don't divide yet by batch size
+        new_cost = old_cost + cost
+        
         return cost, h_t
 
     def reg_updates_cost(self):
@@ -69,7 +79,7 @@ class DRNN:
         """returns symbolic variable based on ch_prev and xs."""
         num_examples = xs.shape[1]
         h_prev = T.zeros([self.hdim, num_examples], dtype='float64')
-        results, updates = scan(fn = self.drnn_timestep, 
+        results, updates = scan(fn = self.dgru_timestep, 
                                 outputs_info = [np.float64(0), h_prev],
                                 sequences = xs,
                                 non_sequences = ys)
@@ -104,11 +114,16 @@ class DRNN:
         return self.prop_compiled(xs, ys)
 
 
-    def drnn_output(self, x_t, old_label, h_prev):
+    def dgru_output(self, x_t, old_label, h_prev):
 
         Lx_t = self.L[:,x_t]
-        h_t = T.tanh(T.dot(self.Wx, Lx_t) + T.dot(self.Wh, h_prev))
-        print h_t.type
+        # gates (update, reset)
+        z_t = sigmoid(T.dot(self.Wz, Lx_t) + T.dot(self.Uz, h_prev))
+        r_t = sigmoid(T.dot(self.Wr, Lx_t) + T.dot(self.Ur, h_prev))
+        # combine them
+        h_new_t = T.tanh(T.dot(self.Wh, Lx_t) + r_t * T.dot(self.Uh, h_prev))
+        h_t = z_t * h_prev + (1 - z_t) * h_new_t
+
         y_hat_t = softmax(T.dot(self.U, h_t) + self.b)[0]
         out_label = T.argmax(y_hat_t)
 
@@ -118,7 +133,7 @@ class DRNN:
     def symbolic_output(self, xs):
         """generate ys from a given h_prev"""
         h_prev = T.zeros(self.hdim, dtype='float64')
-        results, updates = scan(fn = self.drnn_output, 
+        results, updates = scan(fn = self.dgru_output, 
                                 outputs_info = [np.int64(0), h_prev],
                                 sequences=xs)
 
@@ -179,7 +194,7 @@ class DRNN:
 
     def sgd(self, batch_size, n_epochs, X_train, Y_train, X_dev=None, Y_dev=None, verbose=True, update_rule='momentum', filename='models/tmp.p'):
         """Implentation of minibatch SGD over all training data (copied from enc_dec). End-tokens will be automatically added later"""
-        best_dev_cost = 1000000.0
+        best_dev_cost = 10000000
         # partitions is a list of 2D lists, one for each input length
         partitionX, partitionY = self.partition_XY(X_train, Y_train)
         # Weights for random sampling, given by how many examples are there for each size
@@ -215,6 +230,7 @@ class DRNN:
 
             # Print progress
             if verbose and (epoch % 10) == 0:
+                self.save_model(filename)
                 print "Epoch", epoch
                 tot_cost = 0.0
                 for i in range(50):
@@ -233,7 +249,6 @@ class DRNN:
                         print "Saving"
                         self.save_model(filename)
                         best_dev_cost = tot_cost/50.0
-
 
     def partition_XY(self, X_train, Y_train):
         partitionX = {}

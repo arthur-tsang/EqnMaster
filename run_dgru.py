@@ -3,7 +3,7 @@
 import numpy as np
 import sys
 import signal
-from d_rnn import DRNN
+from d_gru import DGRU
 #from visualize_vecs import svd_visualize, tsne_visualize, pca_visualize
 
 from run_helpers2 import extract_discr_data, invocab2, decode
@@ -27,14 +27,14 @@ if __name__ == '__main__':
     X_dev, Y_dev = extract_discr_data(dev_file, asNumpy=False)
 
     def signal_handler(signal, frame):
-        print('You pressed Ctrl+C!')
+        print('You pressed Ctrl+Z!')
         toy_problems = [decode(x, invocab2) for x in X_train]
         for toy, x in zip(toy_problems, X_train):
-            print toy,'=', drnn.generate_answer(x)
+            print toy,'=', dgru.generate_answer(x)
         sys.exit(0)
 
     
-    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTSTP, signal_handler)
 
     ## Hyperparameters
     # hdim = 5
@@ -60,18 +60,18 @@ if __name__ == '__main__':
     alpha = float(sys.argv[8])
     rho = float(sys.argv[9])
 
-    print "Training D-RNN"
+    print "Training D-GRU"
     print "hdim: %d wdim: %d lr: %f reg: %f epochs: %d batch_size: %d" % (hdim, wdim, alpha, rho, n_epochs, batch_size)
     print "Num Examples: %d" % (dataset_size)
     print "Data: " + train_file
     print "Saving to " + model_filename
-    drnn = DRNN(vdim, hdim, wdim, outdim, alpha=alpha, rho = rho)
+    dgru = DGRU(vdim, hdim, wdim, outdim, alpha=alpha, rho = rho)
 
     if sys.argv[10] == 'retrain':
         print 'Retraining'
-        drnn.load_model(model_filename) # if retraining
-    drnn.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=X_dev, Y_dev=Y_dev, verbose=True, update_rule='momentum', filename=model_filename)
-    #drnn.save_model(model_filename)
+        dgru.load_model(model_filename) # if retraining
+    dgru.sgd(batch_size, n_epochs, X_train, Y_train, X_dev=X_dev, Y_dev=Y_dev, verbose=True, update_rule='momentum', filename=model_filename)
+    #dgru.save_model(model_filename)
 
     # ## LSTMEncDec model test
     toy_problems = [decode(x, invocab2) for x in X_train]
@@ -81,4 +81,4 @@ if __name__ == '__main__':
     # #pca_visualize(np.transpose(L), invocab, outfile = 'figs/pca_lstm.jpg')
 
     for toy, x in zip(toy_problems, X_train):
-        print toy,'=', drnn.generate_answer(x)
+        print toy,'=', dgru.generate_answer(x)
