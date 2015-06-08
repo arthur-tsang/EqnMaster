@@ -9,7 +9,7 @@ import signal
 
 rng = np.random
 
-class DRNN:
+class DNN:
 
     def __init__(self, vdim, hdim, wdim, outdim=2, alpha=.005, rho=.0001, mu=0.75, rseed=10):
         
@@ -35,11 +35,11 @@ class DRNN:
         self.L = shared(random_weight_matrix(wdim, vdim), name='L')
         # W: times character-vector, U: times previous-hidden-vector
         self.Wx = shared(random_weight_matrix(hdim, wdim), name='Wx')
-        self.Wh = shared(random_weight_matrix(wdim, wdim), name='Wh')
+        #self.Wh = shared(random_weight_matrix(wdim, wdim), name='Wh')
         self.U = shared(random_weight_matrix(outdim, hdim), name='U')
         self.b  = shared(np.zeros([outdim, 1]), name='b', broadcastable=(False, True))
 
-        self.params = [self.L, self.Wx, self.Wh, self.U, self.b]
+        self.params = [self.L, self.Wx, self.U, self.b]
         self.vparams = [0.0*param.get_value() for param in self.params]
 
         self.prop_compiled = self.compile_self()
@@ -50,11 +50,12 @@ class DRNN:
         for dparam in self.dparams:
             dparam.set_value(0 * dparam.get_value())
 
-    def drnn_timestep(self, x_t, old_cost, h_prev, ys):
-
+    def dnn_timestep(self, x_t, old_cost, h_prev, ys):
+        """Basically, part of a summation of Lx's"""
         Lx_t = self.L[:,x_t]
         # gates (update, reset)
-        h_t = T.tanh(T.dot(self.Wx, Lx_t) + T.dot(self.Wh, h_prev))
+        # h_t = T.tanh(T.dot(self.Wx, Lx_t) + T.dot(self.Wh, h_prev))
+        h_t = h_prev + T.dot(self.Wx, Lx_t) # just a stupid linear combination
         y_hat_t = softmax((T.dot(self.U, h_t) + self.b).T).T
         cost = T.sum(-T.log(y_hat_t[ys, T.arange(ys.shape[0])]))
         return cost, h_t
@@ -69,7 +70,7 @@ class DRNN:
         """returns symbolic variable based on ch_prev and xs."""
         num_examples = xs.shape[1]
         h_prev = T.zeros([self.hdim, num_examples], dtype='float64')
-        results, updates = scan(fn = self.drnn_timestep, 
+        results, updates = scan(fn = self.dnn_timestep, 
                                 outputs_info = [np.float64(0), h_prev],
                                 sequences = xs,
                                 non_sequences = ys)
@@ -107,7 +108,8 @@ class DRNN:
     def drnn_output(self, x_t, old_label, h_prev):
 
         Lx_t = self.L[:,x_t]
-        h_t = T.tanh(T.dot(self.Wx, Lx_t) + T.dot(self.Wh, h_prev))
+        h_t = T.dot(self.Wx, Lx_t) + h_prev
+        #h_t = T.tanh(T.dot(self.Wx, Lx_t) + T.dot(self.Wh, h_prev))
         print h_t.type
         y_hat_t = softmax(T.dot(self.U, h_t) + self.b)[0]
         out_label = T.argmax(y_hat_t)
@@ -215,14 +217,14 @@ class DRNN:
             if verbose and (epoch % 10) == 0:
                 print "Epoch", epoch
                 tot_cost = 0.0
-                for i in range(50):
+                for i in range(min(N,50)):
                     single_X = np.array(X_train[i]).reshape([-1, 1])
                     single_Y = np.array([Y_train[i]])
                     tot_cost += self.process_batch(single_X, single_Y, shouldUpdate = False)
                 print "Training Cost (estimate):", tot_cost/50.0
                 if X_dev is not None:
                     tot_cost = 0.0
-                    for i in range(50):
+                    for i in range(min(N,50)):
                         single_X = np.array(X_dev[i]).reshape([-1, 1])
                         single_Y = np.array([Y_dev[i]])
                         tot_cost += self.process_batch(single_X, single_Y, shouldUpdate = False)
@@ -266,7 +268,12 @@ class DRNN:
 
 
 if __name__ == '__main__':
-    pass
+    dnn= DNN(12,12,12)
+    X_train = [[1,2,3], [4,5]]
+    Y_train = [1, 0]
+    dnn.sgd(5, 1000, X_train, Y_train)
+    print dnn.generate_answer([1,2,3])
+    print dnn.generate_answer([4,5])
     # print 'Sanity check'
     # gru = GRUEnc(15,15,15)
     # xs = [1,2,3]
